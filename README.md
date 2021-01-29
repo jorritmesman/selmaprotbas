@@ -18,7 +18,7 @@ You can run Selmaprotbas the same way you can run any other model coupled to GOT
 option "fabm/use" to "true". You also need to have a "fabm.yaml" file in the same directory as gotm.yaml. Use the fabm.yaml file that we provide 
 on this GitHub page. In this file you can change parameter and initialisation values, or add/remove phytoplankton and zooplankton groups. If a
 parameter is not defined in the fabm.yaml file, it is set to its default (you can therefore add more parameters than are in our provided file,
-or remove parameters that you plan to keep at the default anyways.
+or remove parameters that you plan to keep at the default anyways).
 
 The only factor related to biogeochemistry you can't access in fabm.yaml file or the "fabm" section of gotm.yaml, is influx of biogeochemical
 variables in the inflow. In the gotm.yaml file, you can add new subsections for each inflow (next to flow, temp, salt...) for e.g. selmaprotbas/po,
