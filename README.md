@@ -1,8 +1,8 @@
-# selmaprotbas
+# Selmaprotbas
 Adaptation to the SELMA model, coupled to the Framework for Aquatic Biogeochemical Models (FABM)
 
-This model describes temporal dynamics of inorganic nutrients, oxygen, phytoplankton, and zooplankton. Coupled to GOTM, it does this 
-for multiple one-dimensional layers in the water column. The SELMA model which it was based on
+This model describes temporal dynamics of inorganic nutrients, oxygen, phytoplankton, and zooplankton. Coupled to a physical model, it
+does this for multiple layers or cells in the water column. The SELMA model which it was based on
 ("github.com/fabm-model/fabm/tree/master/src/models/selma") was itself derived from the ERGOM model (Ecological ReGional Ocean Model,
 "https://ergom.net/"). See the comments at the start of ./selmaprotbas/selmaprotbas.F90 for contributions and references. 
 
