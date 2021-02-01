@@ -46,8 +46,8 @@
 !  - Variable nutrient ratios in detritus and fluff are now possible -> different pools
 !  - Calculation of chlorophyll is now based on phytoplankton C content and the Yc parameter
 !  - Added potential for buoyancy regulation in phytoplankton
-!  - Maximum growth rate can now be scaled with beta parameter, following Reynolds et al. 2011
-!  - Light limitation now also following Reynolds et al. 2011
+!  - Maximum growth rate can now be scaled with beta parameter, following Reynolds et al. 2001
+!  - Light limitation now also following Reynolds et al. 2001
 !  - Nutrient uptake parameter (alpha) can now differ per nutrient
 !  - Zooplankton predation now conserves mass if prey has different nutrient ratio
 !
