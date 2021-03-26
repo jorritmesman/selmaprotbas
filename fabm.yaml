@@ -145,7 +145,6 @@ instances:
       fl_burialrate: 0.001               # sediment burial rate (1/d), default = 0.001
       pliberationrate: 0.1               # phosphate liberation rate, anoxic sediments (1/d), default = 0.1
       ipo4th: 100.0                      # maximum phosphorus density available for burial (mmol P/m2), default = 100.0
-      maxsed: 200000.0                     # maximum active sediment density (mmol C/m2), default = 6625.0
       br0: 0.03                          # bioresuspension rate (1/d), default = 0.03
       fds: 0.7                           # fraction of sediment remineralization fueled by denitrification (-), default = 0.7
       pvel: 5.0                          # piston velocity (m/d), default = 5.0

@@ -37,6 +37,8 @@ All parameters can be accessed in text (YAML) format.
 - Light limitation now also follows Reynolds et al. 2001, using the alpha_light parameter
 - Nutrient uptake parameter (alpha) can now differ per nutrient
 - Zooplankton predation now also conserves mass if prey has a different nutrient ratio
+- maxsed parameter has been removed
+- Iron-bound phosphorus is included in the calculation of total-P
 
 ## How to install?
 Selmaprotbas can only be run together with the Framework for Aquatic Biogeochemical Models (FABM, "https://github.com/fabm-model/fabm"),

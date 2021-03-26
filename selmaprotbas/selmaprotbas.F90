@@ -50,6 +50,8 @@
 !  - Light limitation now also following Reynolds et al. 2001
 !  - Nutrient uptake parameter (alpha) can now differ per nutrient
 !  - Zooplankton predation now conserves mass if prey has different nutrient ratio
+!  - maxsed parameter has been removed
+!  - Iron-bound P is included in calculation of total-P
 !
 ! !MODULE: selmaprotbas
 !
@@ -79,7 +81,7 @@
       real(rk) :: nb,deltao,nue,sigma_b,dn,dn_sed
       real(rk) :: q10_rec,ade_r0,alphaade,q10_recs
       real(rk) :: sedrate,erorate,sedratepo4,eroratepo4,po4ret
-      real(rk) :: fl_burialrate,pburialrate,pliberationrate,ipo4th,maxsed,br0,fds,pvel,tau_crit
+      real(rk) :: fl_burialrate,pburialrate,pliberationrate,ipo4th,br0,fds,pvel,tau_crit
       integer  :: newflux
       character(len=16) :: env_type ! identifier for setting the environment to "marine" or "fresh" (freshwater/lake) 
    contains
@@ -131,7 +133,6 @@
    call self%get_parameter(self%fl_burialrate,'fl_burialrate','1/d', 'sediment burial rate', default=0.001_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%pliberationrate,'pliberationrate','1/d', 'phosphate liberation rate, anoxic sediments', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%ipo4th,  'ipo4th',  'mmol P/m2', 'maximum phosphorus density available for burial', default=100._rk)
-   call self%get_parameter(self%maxsed,  'maxsed',  'mmol C/m2', 'maximum active sediment density', default=6625._rk)
    call self%get_parameter(self%br0,     'br0',     '1/d', 'bioresuspension rate', default=0.03_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%fds,     'fds',     '-', 'fraction of sediment remineralization fueled by denitrification', default=0.7_rk)
    call self%get_parameter(self%pvel,    'pvel',    'm/d', 'piston velocity', default=5._rk, scale_factor=1.0_rk/secs_per_day)
@@ -151,10 +152,10 @@
    else
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', no_river_dilution=.true.)
    end if
-   call self%register_state_variable(self%id_fl_c,'fl_c','mmol C/m2', 'carbon fluff', minimum=0.0_rk,maximum=self%maxsed)
-   call self%register_state_variable(self%id_fl_p,'fl_p','mmol P/m2', 'phosphorus fluff', minimum=0.0_rk,maximum=self%maxsed)
-   call self%register_state_variable(self%id_fl_n,'fl_n','mmol N/m2', 'nitrogen fluff', minimum=0.0_rk,maximum=self%maxsed)
-   call self%register_state_variable(self%id_fl_si,'fl_si','mmol Si/m2', 'silica fluff', minimum=0.0_rk,maximum=self%maxsed)
+   call self%register_state_variable(self%id_fl_c,'fl_c','mmol C/m2', 'carbon fluff', minimum=0.0_rk)
+   call self%register_state_variable(self%id_fl_p,'fl_p','mmol P/m2', 'phosphorus fluff', minimum=0.0_rk)
+   call self%register_state_variable(self%id_fl_n,'fl_n','mmol N/m2', 'nitrogen fluff', minimum=0.0_rk)
+   call self%register_state_variable(self%id_fl_si,'fl_si','mmol Si/m2', 'silica fluff', minimum=0.0_rk)
    call self%register_state_variable(self%id_pb,'pb','mmol P/m2', 'PFe_s', minimum=0.0_rk)
    call self%register_state_variable(self%id_pw,'pw','mmol P/m3', 'PFe_w', minimum=0.0_rk,vertical_movement=wpo4/secs_per_day,no_river_dilution=.true.)
      
@@ -170,6 +171,8 @@
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_fl_n)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_fl_p)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_fl_c)
+	call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pb)
+	call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pw)
    call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_dd_c, kc)
    
    
@@ -380,15 +383,15 @@
    oxlim = max (0.0_rk,oxb) * max (0.0_rk,oxb) / (0.01_rk + max(0.0_rk,oxb) * max(0.0_rk,oxb))
 
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (carbon)
-   _SET_BOTTOM_ODE_(self%id_fl_c,-llsd * fl_c + llds * ddb_c - biores * fl_c - recs * fl_c - fl_c * self%fl_burialrate * fl_c/self%maxsed)
+   _SET_BOTTOM_ODE_(self%id_fl_c,-llsd * fl_c + llds * ddb_c - biores * fl_c - recs * fl_c - fl_c * self%fl_burialrate) ! Prev version; 2nd order: * fl_c
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (phosphorus)
-   _SET_BOTTOM_ODE_(self%id_fl_p,-llsd * fl_p + llds * ddb_p - biores * fl_p - recs * fl_p - fl_p * self%fl_burialrate * fl_p/self%maxsed)
+   _SET_BOTTOM_ODE_(self%id_fl_p,-llsd * fl_p + llds * ddb_p - biores * fl_p - recs * fl_p - fl_p * self%fl_burialrate) ! Prev version; 2nd order: * fl_p
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (nitrogen)
-   _SET_BOTTOM_ODE_(self%id_fl_n,-llsd * fl_n + llds * ddb_n - biores * fl_n - recs * fl_n - fl_n * self%fl_burialrate * fl_n/self%maxsed)
+   _SET_BOTTOM_ODE_(self%id_fl_n,-llsd * fl_n + llds * ddb_n - biores * fl_n - recs * fl_n - fl_n * self%fl_burialrate) ! Prev version; 2nd order: * fl_n
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (silica)
-   _SET_BOTTOM_ODE_(self%id_fl_si,-llsd * fl_si + llds * ddb_si - biores * fl_si - recs * fl_si - fl_si * self%fl_burialrate * fl_si/self%maxsed)
+   _SET_BOTTOM_ODE_(self%id_fl_si,-llsd * fl_si + llds * ddb_si - biores * fl_si - recs * fl_si - fl_si * self%fl_burialrate) ! Prev version; 2nd order: * fl_si
    ! P-Fe resuspension, sedimentation, bio-resuspension, liberation, retention and burial
-   _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb -plib * pb + recs * fl_p * pret * oxlim - pbr * self%pburialrate * fl_c/self%maxsed)
+   _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb - plib * pb + recs * fl_p * pret * oxlim - pbr * self%pburialrate) ! Prev version; 2nd order: * fl_c
 
    ! Denitrification in sediments
    _SET_BOTTOM_EXCHANGE_(self%id_nn,-ldn_N * recs * fl_n)
@@ -415,8 +418,8 @@
 
    ! BENTHIC DIAGNOSTIC VARIABLES
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(ldn_N * recs * fl_n + fracdenitsed * recs * fl_n) * secs_per_day)
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate * fl_c/self%maxsed) * secs_per_day)
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate * fl_c/self%maxsed) * secs_per_day)
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
 
    ! Leave spatial loops over the horizontal domain (if any).
    _HORIZONTAL_LOOP_END_
