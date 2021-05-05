@@ -58,7 +58,7 @@
       type (type_diagnostic_variable_id) :: id_GPP
       type (type_diagnostic_variable_id) :: id_NPP
 
-      real(rk) :: alpha_light
+      real(rk) :: alpha_light, imin
       real(rk) :: alpha, alpha_n, alpha_p, alpha_si
 	    real(rk) :: beta
       logical  :: nitrogen_fixation
@@ -69,7 +69,7 @@
       real(rk) :: rfr, rfn, rfs
       real(rk) :: r0
       real(rk) :: tll
-      integer :: tlim
+      integer :: tlim, llim
       real(rk) :: nb
       real(rk) :: deltao
       real(rk) :: Yc
@@ -137,7 +137,14 @@
    case (2)
       call self%get_parameter(self%tll, 'tll', 'degrees C', 'lower temperature limit', default=13.5_rk)
    end select
-   call self%get_parameter(self%nb,      'nb',      '1/d', 'excretion rate', default=0.01_rk, scale_factor=1.0_rk/secs_per_day)
+   call self%get_parameter(self%llim,  'llim',  '', 'light limitation of growth (1: Reynolds, 2: Selma)', default=1)
+   select case (self%llim)
+   case (1)
+      call self%get_parameter(self%alpha_light, 'alpha_light', 'd-1 [W/m2]-1', 'the slope of light-dependent growth', default=0.1_rk,scale_factor=1.0_rk/secs_per_day)
+   case (2)
+      call self%get_parameter(self%imin, 'imin', 'W/m2', 'minimal optimal light radiation', default=50._rk)
+   end select
+	call self%get_parameter(self%nb,      'nb',      '1/d', 'excretion rate', default=0.01_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%deltao,  'deltao',  '1/d', 'mortality rate', default=0.02_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%Yc,      'Yc',      'mmol C/mg Chl a', 'carbon : chlorophyll a ratio', default=6.25_rk)
    call self%get_parameter(wz,           'wz',      'm/d',  'vertical velocity (positive: upwards/floating, negative: downwards/sinking)', default=0.0_rk, scale_factor=1.0_rk/secs_per_day)
@@ -202,7 +209,7 @@
    real(rk) :: r0_temp
    real(rk) :: c, cg
    real(rk) :: aa, nn, po, o2, si
-   real(rk) :: lightlim
+   real(rk) :: lightlim, iopt
    real(rk) :: ntemp, ptemp, tempq, sitemp
    real(rk) :: nlim, plim, r, silim
    real(rk) :: lpn, lpd
@@ -230,12 +237,18 @@
 	  r0_temp=10**(log10(self%r0)+self%beta*(1000._rk/293._rk-1000._rk/(273._rk+temp)))
 	  
 	  
-	  ! Light limitation, as described in Reynolds et al., 2001, Ecological Modelling, 140, 271-291
-	  if (par > r0_temp/self%alpha_light) then
-	     lightlim = 1.0_rk
-	  else
-	     lightlim = par * self%alpha_light / r0_temp
-	  end if
+	  ! Light limitation
+	  if (self%llim == 1) then
+		  if (par > r0_temp/self%alpha_light) then
+			  lightlim = 1.0_rk
+		  else
+		     lightlim = par * self%alpha_light / r0_temp
+		  end if
+     elseif (self%llim == 2) then
+        ! As in the original SELMA code
+		  iopt = max(0.5_rk * par, self%imin)
+        lightlim = par / iopt * exp(1.0_rk - par / iopt)
+     end if
 	  
 	  ! EOSP
       

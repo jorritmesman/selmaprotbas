@@ -47,7 +47,7 @@
 !  - Calculation of chlorophyll is now based on phytoplankton C content and the Yc parameter
 !  - Added potential for buoyancy regulation in phytoplankton
 !  - Maximum growth rate can now be scaled with beta parameter, following Reynolds et al. 2001
-!  - Light limitation now also following Reynolds et al. 2001
+!  - Light limitation can now also follow Reynolds et al. 2001 (set llim parameter to 1)
 !  - Nutrient uptake parameter (alpha) can now differ per nutrient
 !  - Zooplankton predation now conserves mass if prey has different nutrient ratio
 !  - maxsed parameter has been removed
