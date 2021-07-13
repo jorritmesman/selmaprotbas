@@ -72,4 +72,4 @@ variables in the inflow. In the gotm.yaml file, you can add new subsections for 
 selmaprotbas/nn, etc. Follow the same structure as for the flow, temp, and salt subsections.  
 
 If "fabm/use" is set to "true" in the gotm.yaml file, when you run GOTM, the model described in the fabm.yaml file is run coupled to it (in our
-case Selmaprotbas). In the GOTM output file, you will be able to access the results of the combined GOTM-FABM-Selmaprotbas run. 
+case, Selmaprotbas). In the GOTM output file, you will be able to access the results of the combined GOTM-FABM-Selmaprotbas run. 
