@@ -58,6 +58,11 @@ in the "./code/extern/fabm/src/models" folder (next to the folder for the other 
 
 After this is done, you need to run CMake again and compile the physical model. Now, Selmaprotbas should be ready for use.
 
+### FABM-plus
+Since 2025, this model is part of [FABM-plus](https://github.com/fabm-model/fabm-plus), and can be used together with a suite of physical models
+that incorporate the FABM framework. If installing a physical model that comes with FABM-plus (e.g. [PyGETM](https://github.com/BoldingBruggeman/getm-rewrite)),
+Selmaprotbas (and other biogeochemical models) will be directly included without having to do the installation steps described above.
+
 ## How to run the model?
 You can run Selmaprotbas the same way you can run any other model coupled to a physical model by means of FABM. Here we will use GOTM as an example,
 but the process is similar when using other physical models. 
