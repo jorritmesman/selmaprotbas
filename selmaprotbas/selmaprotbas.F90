@@ -187,10 +187,10 @@
    call self%register_diagnostic_variable(self%id_Si_mg,   'Si_mg',   'mg Si/m**3','silica conc in silica mass unit')
    call self%register_diagnostic_variable(self%id_O2_mg,  'DO_mg',    'mg O2/m**3',  'oxygen in O2 mass unit')
    call self%register_diagnostic_variable(self%id_DNP,     'DNP',     'mmol N/m3/d','denitrification pelagic')
-   call self%register_diagnostic_variable(self%id_DNB,     'DNB',     'mmol N/m2/d','denitrification benthic')
-   call self%register_diagnostic_variable(self%id_SBR,     'SBR',     'mmol C/m2',  'sediment burial')
-   call self%register_diagnostic_variable(self%id_PBR,     'PBR',     'mmol P/m2/d','phosphorus burial')
-   call self%register_diagnostic_variable(self%id_OFL,     'OFL',     'mmol O2/m2/d','oxygen surface flux (positive when into water)')
+   call self%register_diagnostic_variable(self%id_DNB,     'DNB',     'mmol N/m2/d','denitrification benthic', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_SBR,     'SBR',     'mmol C/m2',  'sediment burial', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_PBR,     'PBR',     'mmol P/m2/d','phosphorus burial', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_OFL,     'OFL',     'mmol O2/m2/d','oxygen surface flux (positive when into water)', source=source_do_bottom)
    
       
    
