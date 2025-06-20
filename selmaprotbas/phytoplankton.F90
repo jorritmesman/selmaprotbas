@@ -41,6 +41,7 @@
 !
 ! !USE:
    use fabm_types
+   use fabm_expressions
 
    implicit none
 
@@ -51,7 +52,7 @@
       type (type_state_variable_id) :: id_c
       type (type_state_variable_id) :: id_aa,id_nn,id_po,id_o2,id_dd_c,id_dd_p,id_dd_n,id_dd_si,id_dic,id_si
       type (type_bottom_state_variable_id) :: id_fl_c,id_fl_p,id_fl_n,id_fl_si
-      type (type_dependency_id) :: id_par
+      type (type_dependency_id) :: id_par, id_parmean
       type (type_dependency_id) :: id_temp
       type (type_horizontal_dependency_id) :: id_taub
       type (type_diagnostic_variable_id) :: id_chla
@@ -61,7 +62,7 @@
       real(rk) :: alpha_light, imin
       real(rk) :: alpha, alpha_n, alpha_p, alpha_si
 	    real(rk) :: beta
-      logical  :: nitrogen_fixation
+      logical  :: nitrogen_fixation, use_24h_light
       logical  :: buoyancy_regulation, buoy_temperature, buoy_nutrient
       real(rk) :: par_limit1, par_limit2, par_limit3, vert_vel1, vert_vel2, vert_vel3, vert_vel4
 	    real(rk) :: buoy_temp_limit, vert_vel_temp
@@ -152,6 +153,7 @@
    !call self%get_parameter(self%sll,'sll','PSU', 'lower salinity limit', default=1.0_rk)
    !call self%get_parameter(self%sul,'sul','PSU', 'upper salinity limit', default=10.0_rk)
    call self%get_parameter(self%sedrate, 'sedrate', 'm/d', 'sedimentation rate', default=0.0_rk, scale_factor=1.0_rk/secs_per_day)
+   call self%get_parameter(self%use_24h_light, 'use_24h_light', '-', 'use 24h averaged light for growth', default=.false.)
 
    call self%register_state_variable(self%id_c, 'c', 'mmol C/m3', 'concentration', minimum=0.0_rk, background_value=c0, vertical_movement=wz)
    call self%register_state_dependency(self%id_aa, 'aa', 'mmol N/m3', 'ammonium')
@@ -165,6 +167,10 @@
    call self%register_state_dependency(self%id_dd_si, 'dd_si', 'mmol Si/m3', 'silica detritus')
    call self%register_dependency(self%id_temp, standard_variables%temperature)
    call self%register_dependency(self%id_par,  standard_variables%downwelling_photosynthetic_radiative_flux)
+   if (self%use_24h_light) then
+	  call self%register_dependency(self%id_parmean, temporal_mean(self%id_par,period=86400._rk, resolution=3600._rk))
+   end if
+   
    if (self%sedrate>0.0_rk) then
       call self%get_parameter(self%tau_crit,'tau_crit','N/m2', 'critical shear stress', default=0.07_rk)
       call self%register_state_dependency(self%id_fl_c, 'fl_c', 'mmol C/m2', 'fluff')
@@ -229,7 +235,12 @@
       _GET_(self%id_si,si) ! silica
       _GET_(self%id_o2,o2) ! oxygen
 
-      _GET_(self%id_par,par)   ! local photosynthetically ative radiaiton (W/m2)
+      if (self%use_24h_light) then
+		_GET_(self%id_parmean, par)   ! 24-hour averaged local photosynthetically active radiation (W/m2)
+	  else
+		_GET_(self%id_par, par)   ! local photosynthetically active radiation (W/m2)
+	  end if
+	  
       _GET_(self%id_temp,temp) ! temperature (degrees Celsius)
 	  
 	  ! BOSP

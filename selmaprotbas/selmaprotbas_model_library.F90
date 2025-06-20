@@ -5,6 +5,7 @@ module selmaprotbas_model_library
    use selmaprotbas
    use selmaprotbas_phytoplankton
    use selmaprotbas_zooplankton
+   use selmaprotbas_dom
 
    implicit none
 
@@ -29,6 +30,7 @@ contains
          case ('selmaprotbas'); allocate(type_selmaprotbas::model)
          case ('phytoplankton'); allocate(type_selmaprotbas_phytoplankton::model)
          case ('zooplankton'); allocate(type_selmaprotbas_zooplankton::model)
+		 case ('dom'); allocate(type_selmaprotbas_dom::model)
          case default
             call self%type_base_model_factory%create(name,model)
       end select
