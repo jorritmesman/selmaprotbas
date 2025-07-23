@@ -16,10 +16,11 @@ in the model, and other changes as described in the supplementary material of Me
 * SELMA (see below)
 * PROTBAS - PROTECH based phytplankton model (Markensten & Pierson)
 * PROTECH - Phytoplankton RespOnses To Environmental CHange  (Reynolds et al. 2001)
+* DOMCAST - *See Clayer et al., 2021, doi:10.1029/2021JG006359* (PROGNOS project, Raoul-Marie Couture, José-Luis Guerrero, François Clayer)
 
 Adding PROTECH phytoplankton behaviour to SELMA lake branch within FABM-GOTM framework
 
 ## SELMA - Simple EcoLogical Model for the Aquatic 
+## Selmaprotbas = SELMA + PROTECH
 
-See description of development history and contributors in file
-selmaprotbas.F90. 
+See description of development history and contributors in file selmaprotbas.F90. 

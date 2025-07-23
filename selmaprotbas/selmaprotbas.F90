@@ -52,6 +52,13 @@
 !  - Zooplankton predation now conserves mass if prey has different nutrient ratio
 !  - maxsed parameter has been removed
 !  - Iron-bound P is included in calculation of total-P
+!  2025, by Jorrit Mesman (UU):
+!  - Incorporated DOMCAST (see README.md file) as a DOM module (dom.F90 script)
+!  - Option to use 24h-averaged light for phytoplankton growth equations
+!  - More phytoplankton temperature limitation options (WET/Lehman) and all handling of T-limitation occurs before nutrient and light limiation are checked. The "beta" parameter is no longer used by default, but only when tlim==3.
+!  - An extra phytoplankton light limitation function (similar to the llim=1 option, but more gradual)
+!  - Option to multiply phytoplankton lightlim and nutlim (rather than uses the minimum value of them)
+!  - Compatible with FABM v1.0.4
 !
 ! !MODULE: selmaprotbas
 !
