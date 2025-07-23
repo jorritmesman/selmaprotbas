@@ -148,7 +148,10 @@
    case (1)
       call self%get_parameter(self%alpha_light, 'alpha_light', 'd-1 [W/m2]-1', 'the slope of light-dependent growth', default=0.1_rk,scale_factor=1.0_rk/secs_per_day)
    case (2)
-      call self%get_parameter(self%imin, 'imin', 'W/m2', 'minimal optimal light radiation', default=50._rk)
+      call self%get_parameter(self%imin, 'imin', 'W/m2', 'llim=2: minimal optimal light radiation, default = 50; llim=3:minimal light radiation for growth, default = 0.0', default=50._rk)
+   case (3)
+      call self%get_parameter(self%alpha_light, 'alpha_light', 'd-1 [W/m2]-1', 'the slope of light-dependent growth', default=0.1_rk,scale_factor=1.0_rk/secs_per_day)
+	  call self%get_parameter(self%imin, 'imin', 'W/m2', 'llim=2: minimal optimal light radiation, default = 50; llim=3:minimal light radiation for growth, default = 0.0', default=0.0_rk)
    end select
    call self%get_parameter(self%mult_llim_nutlim, 'mult_llim_nutlim', '-', 'multiply light and nutrient limitation', default=.false.)
    call self%get_parameter(self%nb,      'nb',      '1/d', 'excretion rate', default=0.01_rk, scale_factor=1.0_rk/secs_per_day)
@@ -276,16 +279,19 @@
 	  
 	  ! Light limitation
 	  if (self%llim == 1) then
-		  if (par > r0_temp/self%alpha_light) then
-			  lightlim = 1.0_rk
-		  else
-		     lightlim = par * self%alpha_light / r0_temp
-		  end if
-     elseif (self%llim == 2) then
+		if (par > r0_temp/self%alpha_light) then
+		   lightlim = 1.0_rk
+		else
+		   lightlim = par * self%alpha_light / r0_temp
+		end if
+      elseif (self%llim == 2) then
         ! As in the original SELMA code
-		  iopt = max(0.5_rk * par, self%imin)
+		iopt = max(0.5_rk * par, self%imin)
         lightlim = par / iopt * exp(1.0_rk - par / iopt)
-     end if
+	  elseif (self%llim == 3) then
+	    ! Modification of llim=1, but with a more gradual development of lightlim
+		lightlim = max((1 - exp(-self%alpha_light * (par - self%imin) / r0_temp)), 0.0_rk)
+      end if
 	  
 	  ! EOSP
       
