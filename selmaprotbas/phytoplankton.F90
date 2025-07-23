@@ -61,15 +61,14 @@
 
       real(rk) :: alpha_light, imin
       real(rk) :: alpha, alpha_n, alpha_p, alpha_si
-	    real(rk) :: beta
-      logical  :: nitrogen_fixation, use_24h_light
+      logical  :: nitrogen_fixation, use_24h_light, mult_llim_nutlim
       logical  :: buoyancy_regulation, buoy_temperature, buoy_nutrient
       real(rk) :: par_limit1, par_limit2, par_limit3, vert_vel1, vert_vel2, vert_vel3, vert_vel4
 	    real(rk) :: buoy_temp_limit, vert_vel_temp
       real(rk) :: buoy_nutrient_limit, vert_vel_nutrient
       real(rk) :: rfr, rfn, rfs
       real(rk) :: r0
-      real(rk) :: tll
+      real(rk) :: tll, beta, temp_opt, temp_sigma, temp_min
       integer :: tlim, llim
       real(rk) :: nb
       real(rk) :: deltao
@@ -120,23 +119,29 @@
    call self%get_parameter(self%rfr,   'rfr',   'mol P/mol C', 'phosphorus : carbon ratio in phytoplankton',         default=1.0_rk/106.0_rk)
    call self%get_parameter(self%rfn,   'rfn',   'mol N/mol C', 'nitrogen : carbon ratio in phytoplankton',             default=16.0_rk/106.0_rk)
    call self%get_parameter(self%rfs,   'rfs',   'mol Si/mol C', 'silica : carbon ratio in phytoplankton',            default=0.000_rk)
-   call self%get_parameter(self%alpha_light,  'alpha_light',  'd-1 [W/m2]-1',        'the slope of light-dependent growth',     default=0.1_rk,scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%alpha, 'alpha', 'mmol C/m3',   'half-saturation for nutrient uptake', default=1.65625_rk)
    call self%get_parameter(self%alpha_n, 'alpha_n', 'mmol C/m3',   'half-saturation for nitrogen uptake', default=self%alpha)
    call self%get_parameter(self%alpha_p, 'alpha_p', 'mmol C/m3',   'half-saturation for phosphorus uptake', default=self%alpha)
    call self%get_parameter(self%alpha_si, 'alpha_si', 'mmol C/m3',   'half-saturation for silica uptake', default=self%alpha)
-   call self%get_parameter(self%beta, 'beta', '',   'temperature growth correction factor', default=3.7_rk)
    call self%get_parameter(self%r0,    'r0',    '1/d',         'maximum growth rate at 20 degrees C',  default=1.3_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%nitrogen_fixation,    'nitrogen_fixation', '', 'whether nitrogen fixation is used to acquire nitrogen', default=.false.)
    call self%get_parameter(self%buoyancy_regulation,    'buoyancy_regulation', '', 'whether cells can regulate vertical movement', default=.false.)
    call self%get_parameter(self%buoy_temperature,    'buoy_temperature', '', 'whether temperature can regulate buoyancy, if buoyancy_regulation is true', default=.false.)
    call self%get_parameter(self%buoy_nutrient,    'buoy_nutrient', '', 'whether nutrient limitation can regulate buoyancy, if buoyancy_regulation is true', default=.false.)
-   call self%get_parameter(self%tlim,  'tlim',  '',            'temperature limitation of growth (0: none, 1: flagellate-style, 2: cyanobacteria-style)', default=0)
+   call self%get_parameter(self%tlim,  'tlim',  '', 'temperature limitation of growth (0: none, 1: flagellate-style, 2: cyanobacteria-style, 3:PROTECH-style, 4:optimal-stdev, 5: Lehman-equation)', default=0)
    select case (self%tlim)
    case (1)
       call self%get_parameter(self%tll, 'tll', 'degrees C^2', 'half-saturation temperature, squared', default=100.0_rk)
    case (2)
       call self%get_parameter(self%tll, 'tll', 'degrees C', 'lower temperature limit', default=13.5_rk)
+   case (3)
+      call self%get_parameter(self%beta, 'beta', '', 'temperature growth correction factor', default=3.7_rk)
+   case (4)
+      call self%get_parameter(self%temp_opt, 'temp_opt', 'degrees C', 'optimum temperature of growth rate', default=20.0_rk)
+	  call self%get_parameter(self%temp_sigma, 'temp_sigma', 'degrees C', 'growth rate temperature constant; sigma in Gaussian curve', default=11.6_rk)
+   case (5)
+      call self%get_parameter(self%temp_opt, 'temp_opt', 'degrees C', 'optimum temperature of growth rate', default=20.0_rk)
+	  call self%get_parameter(self%temp_min, 'temp_min', 'degrees C', 'temperature below optimum where growth is 10% of maximum', default=0.0_rk)
    end select
    call self%get_parameter(self%llim,  'llim',  '', 'light limitation of growth (1: Reynolds, 2: Selma)', default=1)
    select case (self%llim)
@@ -145,7 +150,8 @@
    case (2)
       call self%get_parameter(self%imin, 'imin', 'W/m2', 'minimal optimal light radiation', default=50._rk)
    end select
-	call self%get_parameter(self%nb,      'nb',      '1/d', 'excretion rate', default=0.01_rk, scale_factor=1.0_rk/secs_per_day)
+   call self%get_parameter(self%mult_llim_nutlim, 'mult_llim_nutlim', '-', 'multiply light and nutrient limitation', default=.false.)
+   call self%get_parameter(self%nb,      'nb',      '1/d', 'excretion rate', default=0.01_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%deltao,  'deltao',  '1/d', 'mortality rate', default=0.02_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%Yc,      'Yc',      'mmol C/mg Chl a', 'carbon : chlorophyll a ratio', default=6.25_rk)
    call self%get_parameter(wz,           'wz',      'm/d',  'vertical velocity (positive: upwards/floating, negative: downwards/sinking)', default=0.0_rk, scale_factor=1.0_rk/secs_per_day)
@@ -244,9 +250,29 @@
       _GET_(self%id_temp,temp) ! temperature (degrees Celsius)
 	  
 	  ! BOSP
-	  ! Maximum growth rate scales with temperature. Source: PROTBAS model
-	  r0_temp=10**(log10(self%r0)+self%beta*(1000._rk/293._rk-1000._rk/(273._rk+temp)))
-	  
+	  ! Temperature-modification of growth rate, based on tlim parameter
+	  ! 0: none, 1: flagellate-style, 2: cyanobacteria-style, 3:PROTECH-style, 4:optimal-stdev, 5: Lehman-equation
+	  if (self%tlim == 0) then
+		 r0_temp = self%r0
+	  elseif (self%tlim == 1) then
+         ! Flagellate-style: Type III [sigmoidal] functional response ranging between 1 and 2
+		 ! Caveat: this function makes r0 the maximum growth rate at 0 degrees C and increases it by up to a factor 2
+         tempq = max(temp,0.0_rk)**2
+         r0_temp = self%r0 * (1.0_rk + tempq / (self%tll + tempq))
+      elseif (self%tlim == 2) then
+         ! Cyanobacteria-style: 0 at infinitely low temp, 0.5 at tll, 1.0 at infinitely high temp
+         r0_temp = self%r0  / (1.0_rk + exp(self%tll - temp))
+	  elseif (self%tlim == 3) then
+	     ! Exponential change with temperature. 'beta' can be based on cell size aspects. Source: PROTBAS model
+		 r0_temp = 10**(log10(self%r0) + self%beta * (1000._rk / 293._rk - 1000._rk / (273._rk + temp)))
+	  elseif (self%tlim == 4) then
+	     ! Optimal temperature with gaussian distribution. self%r0 is always the growth at 20 degrees. Source: WET (Water Ecosystems Tool) model.
+		 r0_temp = self%r0 * exp(-0.5_rk / self%temp_sigma**2 * ((temp - self%temp_opt)**2 - (20.0_rk - self%temp_opt)**2))
+	  elseif (self%tlim == 5) then
+	     ! Similar to tlim == 4 (WET option), but in this equation, r0 is the growth at Topt (so not necessarily 20 degrees) and use of "t_min" (temp where growth is 10% of optimal) rather than "temp_sigma"
+		 ! Source: Lehman et al. 1975 (doi:10.4319/lo.1975.20.3.0343)
+		 r0_temp = self%r0 * exp(-2.3_rk * ((self%temp_opt - temp) / (self%temp_opt - self%temp_min))**2)
+      end if
 	  
 	  ! Light limitation
 	  if (self%llim == 1) then
@@ -283,18 +309,12 @@
       silim = (sitemp + si_minimal) / (self%alpha_si * self%alpha_si * self%rfs * self%rfs + sitemp + si_minimal)
       
       ! Calculation actual growth rate
-      r = min(lightlim ,nlim, plim, silim) * r0_temp
-
-      ! Temperature limitation
-      if (self%tlim == 1) then
-         ! Flagellate-style: Type III [sigmoidal] functional response ranging between 1 and 2
-         tempq = max(temp,0.0_rk)**2
-         r = r * (1.0_rk + tempq / (self%tll + tempq))
-      elseif (self%tlim == 2) then
-         ! Cyanobacteria-style: 0 at infinitely low temp, 0.5 at tll, 1.0 at infinitely high temp
-         r = r  / (1.0_rk + exp(self%tll - temp))
-      end if
-
+      if (self%mult_llim_nutlim) then
+	     r = lightlim * min(nlim, plim, silim) * r0_temp
+	  else
+	     r = min(lightlim, nlim, plim, silim) * r0_temp
+	  end if
+      
       lpn = self%nb     ! excretion rate
       lpd = self%deltao ! mortality rate
 
