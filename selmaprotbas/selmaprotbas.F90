@@ -119,8 +119,7 @@
    call self%get_parameter(self%dn_sed,  'dn_sed',  '1/d', 'sediment mineralization rate', default=0.002_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(kc,      'kc',      'm2/mmol C', 'specific light attenuation of detritus')
    call self%get_parameter(self%q10_rec, 'q10_rec', '1/K', 'temperature dependence of detritus remineralization', default=0.15_rk)
-   call self%get_parameter(self%ade_r0,  'ade_r0',  '1/d', 'maximum chemoautolithotrophic denitrification rate', default=0.1_rk)
-   self%ade_r0 = self%ade_r0/secs_per_day
+   call self%get_parameter(self%ade_r0,  'ade_r0',  '1/d', 'maximum chemoautolithotrophic denitrification rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%alphaade,'alphaade','mmol N/m3', 'half-saturation constant for chemoautolithotrophic denitrification', default=1.0_rk)
    call self%get_parameter(self%q10_recs,'q10_recs','1/K', 'temperature dependence of sediment remineralization', default=0.175_rk)
    call self%get_parameter(self%tau_crit,'tau_crit','N/m2', 'critical shear stress', default=0.07_rk)
@@ -251,7 +250,8 @@
       nf = otemp / (0.01_rk + otemp) * 0.1_rk * exp (0.11_rk * temp)/secs_per_day
 
       ldn = self%dn * exp (self%q10_rec*temp) ! Mineralization rate depends on temperature
-
+	  
+	  ! Source for chemolithoautotrophic denitrification: Schmidt & Eggert (2012). A regional 3D coupled ecosystem model of the Benguela upwelling system. Marine Science Reports, 87
       if (o2 <= 0.0_rk .and. nn > 0.0_rk) then
          ldn_N = 5.3_rk * nn * nn / (0.001_rk + nn * nn)               ! Denitrification rate depends on nitrate availability
          ldn_O = 1.0_rk - nn * nn / (0.001_rk + nn * nn)               ! Oxygen loss due to denitrification
@@ -334,6 +334,7 @@
    pbr = max(pb, pb * (pb -self%ipo4th + 1.0_rk)) 
 
    !bio-resuspension rate
+   ! Source: Neumann & Schernewski, 2008, doi:10.1016/j.jmarsys.2008.05.003
    biores = self%br0 * max(0.0_rk, oxb) * max(0.0_rk, oxb) &
             / (max(0.0_rk, oxb) * max(0.0_rk, oxb) + 0.03_rk)  
 
