@@ -21,7 +21,7 @@ module selmaprotbas_dom
 	  ! Model parameters
 	  real(rk) :: frac, theta, km_o2, km_no3, k_inh_o2
 	  real(rk) :: k_om1, k_om2, oc_dom, qy_dom, f_par, e_par
-	  real(rk) :: k_floc, mole_per_gram, n_use_factor, ext_coef_a, ext_coef_b
+	  real(rk) :: k_floc, mole_per_weight, n_use_factor, ext_coef_a, ext_coef_b
 	  logical  :: diagnostics
    contains
       procedure :: initialize
@@ -54,7 +54,7 @@ contains
 	  call self%get_parameter(self%f_par, 'f_par', '-', 'PAR fraction', default=0.45_rk)
       call self%get_parameter(self%e_par, 'e_par', 'J mol-1', 'Energy of PAR photons', default=240800._rk)
 	  call self%get_parameter(self%k_floc, 'k_floc', 'd-1', 'flocculation rate', default=0.0006_rk, scale_factor=d_per_s)
-	  call self%get_parameter(self%mole_per_gram, 'mole_per_weight', 'molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
+	  call self%get_parameter(self%mole_per_weight, 'mole_per_weight', 'molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
 	  call self%get_parameter(self%n_use_factor, 'n_use_factor', 'mmol N / mg DOM', 'Factor of bacterial mineralisation as N flux', default=0.8_rk)
 	  call self%get_parameter(self%ext_coef_a, 'ext_coef_a', 'm2 mgDOM-1 ', 'Linear coefficient DOM light influence', default=0.1_rk)
 	  call self%get_parameter(self%ext_coef_b, 'ext_coef_b', '-', 'Exponential coefficient DOM light influence', default=1.22_rk)
@@ -163,8 +163,8 @@ contains
    _SET_ODE_(self%id_aa,  (R21 + R22) * self%n_use_factor)
    
    ! Carbon detritus is produced during flocculation
-   ! Uses mole_per_gram ratio to convert from mg/m3 DOM to mmolC/m3 detritus
-   _SET_ODE_(self%id_dd_c, (R4a + R4b) * self%mole_per_gram)
+   ! Uses mole_per_weight ratio to convert from mg/m3 DOM to mmolC/m3 detritus
+   _SET_ODE_(self%id_dd_c, (R4a + R4b) * self%mole_per_weight)
    
    ! Export diagnostic variables -> rates included only for debugging purposes
    if(self%diagnostics) then

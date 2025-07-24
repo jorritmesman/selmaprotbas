@@ -131,9 +131,9 @@
    call self%get_parameter(self%tlim,  'tlim',  '', 'temperature limitation of growth (0: none, 1: flagellate-style, 2: cyanobacteria-style, 3:PROTECH-style, 4:optimal-stdev, 5: Lehman-equation)', default=0)
    select case (self%tlim)
    case (1)
-      call self%get_parameter(self%tll, 'tll', 'degrees C^2', 'half-saturation temperature, squared', default=100.0_rk)
+      call self%get_parameter(self%tll, 'tll', 'degrees C^2', 'tlim=1; half-saturation temperature, squared, default = 100; tlim=2; lower temperature limit, default = 13.5', default=100.0_rk)
    case (2)
-      call self%get_parameter(self%tll, 'tll', 'degrees C', 'lower temperature limit', default=13.5_rk)
+      call self%get_parameter(self%tll, 'tll', 'degrees C', 'tlim=1; half-saturation temperature, squared, default = 100; tlim=2; lower temperature limit, default = 13.5', default=13.5_rk)
    case (3)
       call self%get_parameter(self%beta, 'beta', '', 'temperature growth correction factor', default=3.7_rk)
    case (4)
@@ -143,7 +143,7 @@
       call self%get_parameter(self%temp_opt, 'temp_opt', 'degrees C', 'optimum temperature of growth rate', default=20.0_rk)
 	  call self%get_parameter(self%temp_min, 'temp_min', 'degrees C', 'temperature below optimum where growth is 10% of maximum', default=0.0_rk)
    end select
-   call self%get_parameter(self%llim,  'llim',  '', 'light limitation of growth (1: Reynolds, 2: Selma)', default=1)
+   call self%get_parameter(self%llim,  'llim',  '', 'light limitation of growth (1: Reynolds, 2: Selma, 3: Reynolds-smoothed)', default=1)
    select case (self%llim)
    case (1)
       call self%get_parameter(self%alpha_light, 'alpha_light', 'd-1 [W/m2]-1', 'the slope of light-dependent growth', default=0.1_rk,scale_factor=1.0_rk/secs_per_day)
@@ -177,7 +177,7 @@
    call self%register_dependency(self%id_temp, standard_variables%temperature)
    call self%register_dependency(self%id_par,  standard_variables%downwelling_photosynthetic_radiative_flux)
    if (self%use_24h_light) then
-	  call self%register_dependency(self%id_parmean, temporal_mean(self%id_par,period=86400._rk, resolution=3600._rk))
+	  call self%register_dependency(self%id_parmean, temporal_mean(self%id_par, period=86400._rk, resolution=3600._rk))
    end if
    
    if (self%sedrate>0.0_rk) then
