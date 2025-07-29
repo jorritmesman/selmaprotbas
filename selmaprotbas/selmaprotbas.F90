@@ -264,7 +264,7 @@
 
       	 ! Source for chemolithoautotrophic denitrification: Schmidt & Eggert (2012). A regional 3D coupled ecosystem model of the Benguela upwelling system. Marine Science Reports, 87
 	 ! process rates in the different o2, no3 levels  [should all processes be multiplied by ldn instead of below ??]   
-         ldn_N = nn * nn / (0.001_rk + nn * nn) * (1-o2_switch) * self%den_frac_denann   ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox
+         ldn_N = nn * nn / (0.001_rk + nn * nn) * (1-o2_switch) * self%den_frac_denann   ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox [most probbale the right thinf is to add process rate]
          annm = nn * nn / (0.001_rk + nn * nn) * aa * aa / (0.001_rk + aa * aa) * (1-o2_switch)*(1 - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox         
          ldn_S = self%mbsrate * (1-o2_switch)*(1-nn_switch)        ! Mineralization rate with sulphate
          ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * (1-o2_switch)  ! ade rate nitrate dependent
@@ -273,7 +273,7 @@
 
       _SET_ODE_(self%id_o2, -6.625 * ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk) 
       _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - 12.25_rk * annm * dd_n)
-      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * (1-o2_switch)*nn_switch * dd_n - nn * ade - 13.25_rk * annm * dd_n)
+      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * (1-o2_switch)*nn_switch * dd_n - ade * nn - 13.25_rk * annm * dd_n)
       _SET_ODE_(self%id_po, (ldn + annm) * dd_p) 
       _SET_ODE_(self%id_si, (ldn + annm) * dd_si)
       _SET_ODE_(self%id_dd_c, - (ldn + annm) * dd_c)
