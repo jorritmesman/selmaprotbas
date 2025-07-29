@@ -89,7 +89,7 @@
       real(rk) :: q10_rec,ade_r0,alphaade,q10_recs
       real(rk) :: sedrate,erorate,sedratepo4,eroratepo4,po4ret
       real(rk) :: fl_burialrate,pburialrate,pliberationrate,ipo4th,br0,fds,pvel,tau_crit
-      integer  :: newflux
+      integer  :: newflux, o2_switch, nn_switch
       character(len=16) :: env_type ! identifier for setting the environment to "marine" or "fresh" (freshwater/lake) 
    contains
       procedure :: initialize
@@ -251,6 +251,9 @@
 
       _GET_(self%id_temp,temp)
 
+      o2_switch = merge(0, 1, o2 > 0.0_rk)
+      nn_switch = merge(0, 1, nn > 0.0_rk)
+
       !!!! NITRIFICATION RATE !!!!
       otemp = max(0.0_rk, o2) !for oxygen dependent process if o2<0 then o2=0
       ! Nitrification rate depends on oxygen availability and temperature
@@ -259,20 +262,16 @@
       ldn = self%dn * exp (self%q10_rec*temp) ! Mineralization rate depends on temperature
 	  
 	  ! Source for chemolithoautotrophic denitrification: Schmidt & Eggert (2012). A regional 3D coupled ecosystem model of the Benguela upwelling system. Marine Science Reports, 87
-      if (o2 <= 0.0_rk .and. nn > 0.0_rk) then
-         ldn_N = 5.3_rk * nn * nn / (0.001_rk + nn * nn)               ! Denitrification rate depends on nitrate availability
-         ldn_O = 1.0_rk - nn * nn / (0.001_rk + nn * nn)               ! Oxygen loss due to denitrification
-         ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * nn ! ade rate nitrate dependent
-      else
-         ldn_N = 0.0_rk
-         ldn_O = 1.0_rk  ! Negative oxygen = H2S production
-         ade = 0.0_rk
-      endif
-
-      _SET_ODE_(self%id_o2, - ldn_O * ldn * dd_c - 2.0_rk * nf * aa + ade * 0.375_rk)
-      _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa)
-      _SET_ODE_(self%id_nn, nf * aa - ldn_N * ldn * dd_n - ade)
-      _SET_ODE_(self%id_po, ldn * dd_p)
+	 ! process rates in the different o2, no3 levels  [should all processes be multiplied by ldn instead of below ??]   
+         ldn_N = 5.3_rk * nn * nn / (0.001_rk + nn * nn) * (1-o2_switch)    ! Denitrification rate depends on nitrate availability
+         ldn_O = 1.0_rk - nn * nn / (0.001_rk + nn * nn) * (1-o2_switch) +  self%mbsrate * (1-o2_switch)*(1-nn_switch) + 6.625*o2_switch    ! Oxygen loss due to mineralization. [check 6.625!]
+         ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * (1-o2_switch)  ! ade rate nitrate dependent
+	 annm = nn * nn / (0.001_rk + nn * nn) * aa * aa / (0.001_rk + aa * aa) * (1-o2_switch) ! Anammox rate depends on nitrate and ammonium availability
+	      
+      _SET_ODE_(self%id_o2, - ldn_O * ldn * dd_c - 2.0_rk * nf * aa + ade * 0.375_rk)  ! [recheck oxygen stoichiometry]
+      _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - (1 - self%den2ann) * 12.25_rk * annm * dd_n)
+      _SET_ODE_(self%id_nn, nf * aa - self%den2ann * ldn_N * ldn * dd_n - nn * ade - (1 - self%den2ann) * 13.25_rk * annm * dd_n)
+      _SET_ODE_(self%id_po, ldn * dd_p) ! [starnge that P mineralization is not dependent on anaerobic mineralization types]
       _SET_ODE_(self%id_si, ldn * dd_si)
       _SET_ODE_(self%id_dd_c, - ldn * dd_c)
       _SET_ODE_(self%id_dd_p, - ldn * dd_p)
