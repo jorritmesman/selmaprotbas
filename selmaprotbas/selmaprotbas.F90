@@ -126,8 +126,8 @@
    call self%get_parameter(self%dn_sed,  'dn_sed',  '1/d', 'sediment mineralization rate', default=0.002_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(kc,      'kc',      'm2/mmol C', 'specific light attenuation of detritus')
    call self%get_parameter(self%q10_rec, 'q10_rec', '1/K', 'temperature dependence of detritus remineralization', default=0.15_rk)
-   call self%get_parameter(self%ade_r0,  'ade_r0',  '1/d', 'maximum chemoautolithotrophic denitrification rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
-   call self%get_parameter(self%alphaade,'alphaade','mmol N/m3', 'half-saturation constant for chemoautolithotrophic denitrification', default=1.0_rk)
+   call self%get_parameter(self%ade_r0,  'ade_r0',  '1/d', 'maximum chemolithoautotrophic denitrification rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
+   call self%get_parameter(self%alphaade,'alphaade','mmol N/m3', 'half-saturation constant for chemolithoautotrophic denitrification', default=1.0_rk)
    call self%get_parameter(self%mbsrate,  'mbsrate','1/d', 'mineralization by sulfate rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%den_frac_denann, den_frac_denann','-', 'relative contribution of denitrification out of total denitrification + annamox', default= 1_rk)
    call self%get_parameter(self%q10_recs,'q10_recs','1/K', 'temperature dependence of sediment remineralization', default=0.175_rk)
@@ -262,26 +262,26 @@
       ! Nitrification rate depends on oxygen availability and temperature
       nf = otemp / (0.01_rk + otemp) * 0.1_rk * exp (0.11_rk * temp)/secs_per_day
 
-      ldn = self%dn * exp (self%q10_rec*temp) ! Mineralization rate depends on temperature [documented in schmidt, temp should be (temp-ref_temp)? ]
-	  
-	 ! Source for chemolithoautotrophic denitrification: Schmidt & Eggert (2012). A regional 3D coupled ecosystem model of the Benguela upwelling system. Marine Science Reports, 87
+      	 ! Source for chemolithoautotrophic denitrification: Schmidt & Eggert (2012). A regional 3D coupled ecosystem model of the Benguela upwelling system. Marine Science Reports, 87
 	 ! process rates in the different o2, no3 levels  [should all processes be multiplied by ldn instead of below ??]   
-         ldn_N = 5.3_rk * nn * nn / (0.001_rk + nn * nn) * (1-o2_switch)    ! Denitrification rate depends on nitrate availability
-         ldn_O = 1.0_rk - nn * nn / (0.001_rk + nn * nn) * (1-o2_switch) +  self%mbsrate * (1-o2_switch)*(1-nn_switch) + 6.625_rk*o2_switch    ! Oxygen loss due to mineralization. [check 6.625! and 1.0_rk]
+         ldn_N = nn * nn / (0.001_rk + nn * nn) * (1-o2_switch) * self%den_frac_denann   ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox
+         annm = nn * nn / (0.001_rk + nn * nn) * aa * aa / (0.001_rk + aa * aa) * (1-o2_switch)*(1 - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox         
+         ldn_S = self%mbsrate * (1-o2_switch)*(1-nn_switch)        ! Mineralization rate with sulphate
          ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * (1-o2_switch)  ! ade rate nitrate dependent
-	 annm = ldn * nn * nn / (0.001_rk + nn * nn) * aa * aa / (0.001_rk + aa * aa) * (1-o2_switch) ! Anammox rate depends on nitrate and ammonium availability and on temperature
-	      
-      _SET_ODE_(self%id_o2, - ldn_O * ldn * dd_c - 2.0_rk * nf * aa + ade * 0.375_rk)  ! [recheck oxygen stoichiometry]
-      _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - (1 - self%den_frac_denann) * 12.25_rk * annm * dd_n)
-      _SET_ODE_(self%id_nn, nf * aa - self%den_frac_denann * ldn_N * ldn * dd_n - nn * ade - (1 - self%den_frac_denann) * 13.25_rk * annm * dd_n)
-      _SET_ODE_(self%id_po, ldn * dd_p) ! [starnge that P mineralization is not dependent on anaerobic mineralization types]
-      _SET_ODE_(self%id_si, ldn * dd_si)
-      _SET_ODE_(self%id_dd_c, - ldn * dd_c)
-      _SET_ODE_(self%id_dd_p, - ldn * dd_p)
-      _SET_ODE_(self%id_dd_n, - ldn * dd_n)
-      _SET_ODE_(self%id_dd_si, - ldn * dd_si)
+	 ldn = self%dn * exp (self%q10_rec*temp) * (o2_switch + ldn_N + ldn_S) ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4). Annamox calculated seperately.
+         ldn_O = o2_switch * ldn + ldn_S      ! Oxygen loss rate due to mineralization. 
 
-      if (_AVAILABLE_(self%id_dic)) _SET_ODE_(self%id_dic, ldn * dd_c)
+      _SET_ODE_(self%id_o2, -6.625 * ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk) 
+      _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - 12.25_rk * annm * dd_n)
+      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * (1-o2_switch)*nn_switch * dd_n - nn * ade - 13.25_rk * annm * dd_n)
+      _SET_ODE_(self%id_po, (ldn + annm) * dd_p) 
+      _SET_ODE_(self%id_si, (ldn + annm) * dd_si)
+      _SET_ODE_(self%id_dd_c, - (ldn + annm) * dd_c)
+      _SET_ODE_(self%id_dd_p, - (ldn + annm) * dd_p)
+      _SET_ODE_(self%id_dd_n, - (ldn + annm) * dd_n)
+      _SET_ODE_(self%id_dd_si, - (ldn + annm) * dd_si)
+
+      if (_AVAILABLE_(self%id_dic)) _SET_ODE_(self%id_dic, (ldn + annm) * dd_c)
 
       _SET_DIAGNOSTIC_(self%id_NO3, nn * n_molar_mass)
       _SET_DIAGNOSTIC_(self%id_NH4, aa * n_molar_mass)
