@@ -266,12 +266,12 @@
 	 ! process rates in the different o2, no3 levels  [should all processes be multiplied by ldn instead of below ??]   
          ldn_N = nn * nn / (0.001_rk + nn * nn) * (1-o2_switch) * self%den_frac_denann   ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox [most probbale the right thinf is to add process rate]
          annm = nn * nn / (0.001_rk + nn * nn) * aa * aa / (0.001_rk + aa * aa) * (1-o2_switch)*(1 - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox         
-         ldn_S = self%mbsrate * (1-o2_switch)*(1-nn_switch)        ! Mineralization rate with sulphate
+         ldn_S = self%mbsrate * (1- nn * nn / (0.001_rk + nn * nn)) * (1-o2_switch)        ! Mineralization rate with sulphate. starts a bit before nitrate is depleted
          ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * (1-o2_switch)  ! ade rate nitrate dependent
 	 ldn = self%dn * exp (self%q10_rec*temp) * (o2_switch + ldn_N + ldn_S) ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4). Annamox calculated seperately.
          ldn_O = o2_switch * ldn + ldn_S      ! Oxygen loss rate due to mineralization. 
 
-      _SET_ODE_(self%id_o2, -6.625 * ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk) 
+      _SET_ODE_(self%id_o2, ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk) 
       _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - 12.25_rk * annm * dd_n)
       _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * (1-o2_switch)*nn_switch * dd_n - ade * nn - 13.25_rk * annm * dd_n)
       _SET_ODE_(self%id_po, (ldn + annm) * dd_p) 
@@ -287,7 +287,7 @@
       _SET_DIAGNOSTIC_(self%id_NH4, aa * n_molar_mass)
       _SET_DIAGNOSTIC_(self%id_PO4, po * p_molar_mass)
       _SET_DIAGNOSTIC_(self%id_O2_mg, o2 * o2_molar_mass)
-      _SET_DIAGNOSTIC_(self%id_H2S_mg, 2 * o2 * (o2_switch-1) * h2s_molar_mass)
+      _SET_DIAGNOSTIC_(self%id_H2S_mg, 0.5 * o2 * (o2_switch-1) * h2s_molar_mass)
       _SET_DIAGNOSTIC_(self%id_Si_mg, si * si_molar_mass)
       _SET_DIAGNOSTIC_(self%id_DNP, (ldn_N * ldn * dd_n + ade) * secs_per_day)
 
