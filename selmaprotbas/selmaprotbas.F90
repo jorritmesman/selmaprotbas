@@ -89,7 +89,8 @@
       real(rk) :: q10_rec,ade_r0,alphaade,q10_recs,mbsrate,den_frac_denann
       real(rk) :: sedrate,erorate,sedratepo4,eroratepo4,po4ret
       real(rk) :: fl_burialrate,pburialrate,pliberationrate,ipo4th,br0,fds,pvel,tau_crit
-      integer  :: newflux, o2_switch, nn_switch, oxb_switch, nnb_switch
+      real(rk) :: o2_switch, nn_switch, oxb_switch, nnb_switch ,nn_gswitch
+      integer  :: newflux
       character(len=16) :: env_type ! identifier for setting the environment to "marine" or "fresh" (freshwater/lake) 
    contains
       procedure :: initialize
@@ -227,7 +228,7 @@
 ! !LOCAL VARIABLES:
     real(rk)           :: aa,nn,po,dd_c,dd_p,dd_n,dd_si,o2,si
     real(rk)           :: temp,ldn,nf
-    real(rk)           :: otemp,ldn_N,ldn_O,ade,annm
+    real(rk)           :: otemp,ldn_N,ldn_O,ldn_S,ade,annm
     real(rk),parameter :: p_molar_mass = 30.973761_rk ! molar mass of phosphorus
     real(rk),parameter :: n_molar_mass =  14.0067_rk ! molar mass of nitrogen
     real(rk),parameter :: o2_molar_mass =  31.9988_rk ! molar mass of O2
@@ -254,8 +255,9 @@
 
       _GET_(self%id_temp,temp)
 
-      o2_switch = merge(0, 1, o2 > 0.0_rk)
-      nn_switch = merge(0, 1, nn > 0.0_rk)
+      o2_switch = merge(0.0_rk, 1.0_rk, o2 > 0.0_rk)  
+      nn_switch = merge(0.0_rk, 1.0_rk, nn > 0.0_rk)
+      nn_gswitch = nn * nn / (0.001_rk + nn * nn)    ! nitrate gradual switch - processes slow down when there is little nitrate
 
       !!!! NITRIFICATION RATE !!!!
       otemp = max(0.0_rk, o2) !for oxygen dependent process if o2<0 then o2=0
@@ -264,16 +266,16 @@
 
       	 ! Source for chemolithoautotrophic denitrification: Schmidt & Eggert (2012). A regional 3D coupled ecosystem model of the Benguela upwelling system. Marine Science Reports, 87
 	 ! process rates in the different o2, no3 levels  [should all processes be multiplied by ldn instead of below ??]   
-         ldn_N = nn * nn / (0.001_rk + nn * nn) * (1-o2_switch) * self%den_frac_denann   ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox [most probbale the right thinf is to add process rate]
-         annm = nn * nn / (0.001_rk + nn * nn) * aa * aa / (0.001_rk + aa * aa) * (1-o2_switch)*(1 - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox         
-         ldn_S = self%mbsrate * (1- nn * nn / (0.001_rk + nn * nn)) * (1-o2_switch)        ! Mineralization rate with sulphate. starts a bit before nitrate is depleted
-         ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * (1-o2_switch)  ! ade rate nitrate dependent
+         ldn_N = nn_gswitch * (1.0_rk-o2_switch) * self%den_frac_denann   ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox [most probbale the right thinf is to add process rate]
+         annm = nn_gswitch * aa * aa / (0.001_rk + aa * aa) * (1.0_rk-o2_switch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox         
+         ldn_S = self%mbsrate * (1.0_rk - nn_gswitch) * (1.0_rk-o2_switch)        ! Mineralization rate with sulphate. starts a bit before nitrate is depleted
+         ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * (1.0_rk -o2_switch)  ! ade rate nitrate dependent
 	 ldn = self%dn * exp (self%q10_rec*temp) * (o2_switch + ldn_N + ldn_S) ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4). Annamox calculated seperately.
          ldn_O = o2_switch * ldn + ldn_S      ! Oxygen loss rate due to mineralization. 
 
       _SET_ODE_(self%id_o2, ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk) 
       _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - 12.25_rk * annm * dd_n)
-      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * (1-o2_switch)*nn_switch * dd_n - ade * nn - 13.25_rk * annm * dd_n)
+      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * (1.0_rk-o2_switch)*nn_switch * dd_n - ade * nn - 13.25_rk * annm * dd_n)
       _SET_ODE_(self%id_po, (ldn + annm) * dd_p) 
       _SET_ODE_(self%id_si, (ldn + annm) * dd_si)
       _SET_ODE_(self%id_dd_c, - (ldn + annm) * dd_c)
@@ -287,7 +289,7 @@
       _SET_DIAGNOSTIC_(self%id_NH4, aa * n_molar_mass)
       _SET_DIAGNOSTIC_(self%id_PO4, po * p_molar_mass)
       _SET_DIAGNOSTIC_(self%id_O2_mg, o2 * o2_molar_mass)
-      _SET_DIAGNOSTIC_(self%id_H2S_mg, 0.5 * o2 * (o2_switch-1) * h2s_molar_mass)
+      _SET_DIAGNOSTIC_(self%id_H2S_mg, 0.5_rk * o2 * (o2_switch-1.0_rk) * h2s_molar_mass)
       _SET_DIAGNOSTIC_(self%id_Si_mg, si * si_molar_mass)
       _SET_DIAGNOSTIC_(self%id_DNP, (ldn_N * ldn * dd_n + ade) * secs_per_day)
 
@@ -340,8 +342,8 @@
    _GET_HORIZONTAL_(self%id_taub,taub)
    _GET_(self%id_temp,temp)
 
-   oxb_switch = merge(0, 1, oxb > 0.0_rk)
-   nnb_switch = merge(0, 1, nnb > 0.0_rk)
+   oxb_switch = merge(0.0_rk, 1.0_rk, oxb > 0.0_rk)
+   nnb_switch = merge(0.0_rk, 1.0_rk, nnb > 0.0_rk)
 
    !increased phosphorus burial
    pbr = max(pb, pb * (pb -self%ipo4th + 1.0_rk)) 
@@ -374,13 +376,13 @@
    recs = recs * (0.9_rk * oxb_switch + 0.1_rk)
    
    ! Mineralization rates (see description of pelagic part)
-      ldn_N = 5.3_rk * nnb * nnb / (0.001_rk + nnb * nnb) * (1-oxb_switch) 
-      ldn_O = 1.0_rk - nnb * nnb / (0.001_rk + nnb * nnb) * (1-oxb_switch) + self%mbsrate * (1-oxb_switch)*(1-nnb_switch) + 6.625_rk*oxb_switch    ! Oxygen loss due to mineralization. [check 6.625 and 1.0_rk!]
-      !annm = recs * nnb * nnb / (0.001_rk + nnb * nnb) * aab * aab / (0.001_rk + aab * aab) * (1-oxb_switch) ! Anammox in sediment ?? aab not defined
+      ldn_N = 5.3_rk * nnb * nnb / (0.001_rk + nnb * nnb) * (1.0_rk-oxb_switch) 
+      ldn_O = 1.0_rk - nnb * nnb / (0.001_rk + nnb * nnb) * (1.0_rk-oxb_switch) + self%mbsrate * (1.0_rk-oxb_switch)*(1.0_rk-nnb_switch) + 6.625_rk*oxb_switch    ! Oxygen loss due to mineralization. [check 6.625 and 1.0_rk!]
+      !annm = recs * nnb * nnb / (0.001_rk + nnb * nnb) * aab * aab / (0.001_rk + aab * aab) * (1.0_rk-oxb_switch) ! Anammox in sediment ?? aab not defined
 	
       fracdenitsed = self%fds * oxb_switch         ! denitrification in sediments in fraction of the sediment when there is oxygen
       pret = self%po4ret  * oxb_switch             ! phosphate is stored with oxygen
-      plib = self%pliberationrate * (1-oxb_switch) ! phosphorus is liberated on anoxic condition
+      plib = self%pliberationrate * (1.0_rk-oxb_switch) ! phosphorus is liberated on anoxic condition
       
    oxlim = max (0.0_rk,oxb) * max (0.0_rk,oxb) / (0.01_rk + max(0.0_rk,oxb) * max(0.0_rk,oxb))
 
