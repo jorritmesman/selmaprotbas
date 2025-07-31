@@ -275,7 +275,7 @@
 
       _SET_ODE_(self%id_o2, ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk) 
       _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - 12.25_rk * annm * dd_n)
-      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * (1.0_rk-o2_switch)*nn_switch * dd_n - ade * nn - 13.25_rk * annm * dd_n)
+      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * nn_gswitch * (1.0_rk-o2_switch) * dd_n - ade * nn - 13.25_rk * annm * dd_n) ! check again switch
       _SET_ODE_(self%id_po, (ldn + annm) * dd_p) 
       _SET_ODE_(self%id_si, (ldn + annm) * dd_si)
       _SET_ODE_(self%id_dd_c, - (ldn + annm) * dd_c)
@@ -344,6 +344,8 @@
 
    oxb_switch = merge(0.0_rk, 1.0_rk, oxb > 0.0_rk)
    nnb_switch = merge(0.0_rk, 1.0_rk, nnb > 0.0_rk)
+   nnb_gswitch = nnb * nnb / (0.001_rk + nnb * nnb)    ! nitrate gradual switch - processes slow down when there is little nitrate
+
 
    !increased phosphorus burial
    pbr = max(pb, pb * (pb -self%ipo4th + 1.0_rk)) 
@@ -376,9 +378,10 @@
    recs = recs * (0.9_rk * oxb_switch + 0.1_rk)
    
    ! Mineralization rates (see description of pelagic part)
-      ldn_N = 5.3_rk * nnb * nnb / (0.001_rk + nnb * nnb) * (1.0_rk-oxb_switch) 
-      ldn_O = 1.0_rk - nnb * nnb / (0.001_rk + nnb * nnb) * (1.0_rk-oxb_switch) + self%mbsrate * (1.0_rk-oxb_switch)*(1.0_rk-nnb_switch) + 6.625_rk*oxb_switch    ! Oxygen loss due to mineralization. [check 6.625 and 1.0_rk!]
-      !annm = recs * nnb * nnb / (0.001_rk + nnb * nnb) * aab * aab / (0.001_rk + aab * aab) * (1.0_rk-oxb_switch) ! Anammox in sediment ?? aab not defined
+   ldn_N = recs * nnb_gswitch * (1.0_rk-oxb_switch) ![5.3_rk * - move to balance row]
+   annm = nnb_gswitch * aab * aab / (0.001_rk + aab * aab) * (1.0_rk-oxb_switch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox  ! [aab is not defined]
+   ldn_S = self%mbsrate * (1.0_rk - nnb_gswitch) * (1.0_rk-oxb_switch)        ! Mineralization rate with sulphate. starts a bit before nitrate is depleted
+   ldn_O = recs * oxb_switch + ldn_S    ! Oxygen loss due to mineralization. 
 	
       fracdenitsed = self%fds * oxb_switch         ! denitrification in sediments in fraction of the sediment when there is oxygen
       pret = self%po4ret  * oxb_switch             ! phosphate is stored with oxygen
@@ -398,9 +401,9 @@
    _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb - plib * pb + recs * fl_p * pret * oxlim - pbr * self%pburialrate) ! Prev version; 2nd order: * fl_c
 
    ! Denitrification in sediments
-   _SET_BOTTOM_EXCHANGE_(self%id_nn,-ldn_N * recs * fl_n)
+   _SET_BOTTOM_EXCHANGE_(self%id_nn,-5.3_rk * ldn_N * fl_n)
    ! Oxygen consumption due to mineralization and denitrification
-   _SET_BOTTOM_EXCHANGE_(self%id_o2,-ldn_O * recs * fl_c - 2.0_rk * fracdenitsed * recs * fl_c / 6.625_rk)
+   _SET_BOTTOM_EXCHANGE_(self%id_o2,-ldn_O * fl_c - 2.0_rk * fracdenitsed * recs * fl_c / 6.625_rk) ! check this !!! WTF
    ! Ammonium production due to mineralization (oxic & anoxic)
    _SET_BOTTOM_EXCHANGE_(self%id_aa,(1.0_rk - fracdenitsed) * recs * fl_n)
    ! Phosphate production due to mineralization (retention if oxic) and release in anoxic
