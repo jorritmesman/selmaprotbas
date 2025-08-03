@@ -378,12 +378,12 @@
    recs = recs * (0.9_rk * oxb_switch + 0.1_rk)
    
    ! Mineralization rates (see description of pelagic part)
-   ldn_N = recs * nnb_gswitch * (1.0_rk-oxb_switch) ![5.3_rk * - move to balance row]
+   ldn_N = recs * nnb_gswitch * (1.0_rk-oxb_switch) * self%den_frac_denann    ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox
    annm = nnb_gswitch * aab * aab / (0.001_rk + aab * aab) * (1.0_rk-oxb_switch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox  ! [aab is not defined]
-   ldn_S = self%mbsrate * (1.0_rk - nnb_gswitch) * (1.0_rk-oxb_switch)        ! Mineralization rate with sulphate. starts a bit before nitrate is depleted
-   ldn_O = recs * oxb_switch + ldn_S    ! Oxygen loss due to mineralization. 
+   ldn_S = self%mbsrate * (1.0_rk - nnb_gswitch) * (1.0_rk-oxb_switch)        ! Mineralization rate by sulphate. starts a bit before nitrate is depleted
+   ldn_O = recs * oxb_switch + ldn_S    ! Oxygen loss due to mineralization. or sulphate loss 
 	
-      fracdenitsed = self%fds * oxb_switch         ! denitrification in sediments in fraction of the sediment when there is oxygen
+      ! fracdenitsed = self%fds * oxb_switch         ! denitrification in sediments in fraction of the sediment when there is oxygen
       pret = self%po4ret  * oxb_switch             ! phosphate is stored with oxygen
       plib = self%pliberationrate * (1.0_rk-oxb_switch) ! phosphorus is liberated on anoxic condition
       
@@ -401,11 +401,11 @@
    _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb - plib * pb + recs * fl_p * pret * oxlim - pbr * self%pburialrate) ! Prev version; 2nd order: * fl_c
 
    ! Denitrification in sediments
-   _SET_BOTTOM_EXCHANGE_(self%id_nn,-5.3_rk * ldn_N * fl_n)
+   _SET_BOTTOM_EXCHANGE_(self%id_nn,-5.3_rk * ldn_N * fl_n - 13.25_rk * annm * fl_n)
    ! Oxygen consumption due to mineralization and denitrification
-   _SET_BOTTOM_EXCHANGE_(self%id_o2,-ldn_O * fl_c - 2.0_rk * fracdenitsed * recs * fl_c / 6.625_rk) ! check this !!! WTF
+   _SET_BOTTOM_EXCHANGE_(self%id_o2,-ldn_O * fl_c - 1.6_rk * self%fds * recs * fl_c - ldn_S * fl_c)
    ! Ammonium production due to mineralization (oxic & anoxic)
-   _SET_BOTTOM_EXCHANGE_(self%id_aa,(1.0_rk - fracdenitsed) * recs * fl_n)
+   _SET_BOTTOM_EXCHANGE_(self%id_aa,ldn_S * fl_n + oxb_switch * recs * fl_n * ( 1.0_rk - 5.3_rk * self%fds) - 12.25_rk * annm * fl_n)
    ! Phosphate production due to mineralization (retention if oxic) and release in anoxic
    _SET_BOTTOM_EXCHANGE_(self%id_po, (1.0_rk - pret * oxlim) * recs * fl_p + plib * pb)
    ! Silica production due to mineralization
