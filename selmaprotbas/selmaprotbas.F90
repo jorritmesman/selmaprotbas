@@ -86,7 +86,7 @@ s *#include "fabm_driver.h"
 
       ! Model parameters
       real(rk) :: nb,deltao,nue,sigma_b,dn,dn_sed
-      real(rk) :: q10_rec,ade_r0,alphaade,q10_recs,mbsrate,den_frac_denann
+      real(rk) :: q10_rec,ade_r0,alphaade,q10_recs,mbsrate,mbnnrate,den_frac_denann
       real(rk) :: sedrate,erorate,sedratepo4,eroratepo4,po4ret
       real(rk) :: fl_burialrate,pburialrate,pliberationrate,ipo4th,br0,fds,pvel,tau_crit
       real(rk) :: o2_switch, nn_switch, oxb_switch, nnb_switch ,nn_gswitch
@@ -130,6 +130,7 @@ s *#include "fabm_driver.h"
    call self%get_parameter(self%ade_r0,  'ade_r0',  '1/d', 'maximum chemolithoautotrophic denitrification rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%alphaade,'alphaade','mmol N/m3', 'half-saturation constant for chemolithoautotrophic denitrification', default=1.0_rk)
    call self%get_parameter(self%mbsrate,  'mbsrate','1/d', 'mineralization by sulfate rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
+   call self%get_parameter(self%mbnnrate,  'mbnnrate','1/d', 'mineralization by nitrate rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%den_frac_denann, den_frac_denann','-', 'relative contribution of denitrification out of total denitrification + annamox', default= 1_rk)
    call self%get_parameter(self%q10_recs,'q10_recs','1/K', 'temperature dependence of sediment remineralization', default=0.175_rk)
    call self%get_parameter(self%tau_crit,'tau_crit','N/m2', 'critical shear stress', default=0.07_rk)
@@ -313,7 +314,7 @@ s *#include "fabm_driver.h"
 !
 ! !LOCAL VARIABLES:
    real(rk)                   :: pwb,pb,fl_c,fl_p,fl_n,fl_si,nnb,ddb_c,ddb_p,ddb_n,ddb_si,oxb,taub,temp,biores
-   real(rk)                   :: llds,llsd,bpds,bpsd,recs,ldn_O,ldn_N,plib,oxlim
+   real(rk)                   :: llds,llsd,bpds,bpsd,recs,recs_all,ldn_O,ldn_N,plib,oxb_gswitch
    real(rk)                   :: fracdenitsed,pret,pbr
    real(rk)                   :: tau_frac
    real(rk),parameter :: secs_per_day = 86400._rk
@@ -343,9 +344,9 @@ s *#include "fabm_driver.h"
    _GET_(self%id_temp,temp)
 
    oxb_switch = merge(0.0_rk, 1.0_rk, oxb > 0.0_rk)
+   oxb_gswitch = max (0.0_rk,oxb) * max (0.0_rk,oxb) / (0.01_rk + max(0.0_rk,oxb) * max(0.0_rk,oxb))   ! oxygen gradual switch = oxygen limitation (was oxlim)
    nnb_switch = merge(0.0_rk, 1.0_rk, nnb > 0.0_rk)
    nnb_gswitch = nnb * nnb / (0.001_rk + nnb * nnb)    ! nitrate gradual switch - processes slow down when there is little nitrate
-
 
    !increased phosphorus burial
    pbr = max(pb, pb * (pb -self%ipo4th + 1.0_rk)) 
@@ -372,34 +373,29 @@ s *#include "fabm_driver.h"
    end if
 
    ! temp-dependent detritus mineralization rate   
-   recs = self%dn_sed * exp(self%q10_recs * temp) ! [see below, delete this]
-   
-   ! 10 times lower in anoxic
-   recs = recs * (0.9_rk * oxb_switch + 0.1_rk) ! [see below, delete this?]
+   recs = self%dn_sed * exp(self%q10_recs * temp) ! [keep]
    
    ! Mineralization rates (see description of pelagic part)
-   ldn_N = nnb_gswitch * (1.0_rk-oxb_switch) * self%den_frac_denann    ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox
-   annm = recs? * nnb_gswitch * aab * aab / (0.001_rk + aab * aab) * (1.0_rk-oxb_switch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox  ! [aab is not defined]
-   ldn_S = self%mbsrate * (1.0_rk - nnb_gswitch) * (1.0_rk-oxb_switch)        ! Mineralization rate by sulphate. starts a bit before nitrate is depleted
-   recs = self%dn_sed * exp (self%q10_rec*temp) * (o2_switch + ldn_N + ldn_S) ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4). Annamox calculated seperately.
-   ldn_O = recs * oxb_switch + ldn_S    ! Oxygen loss due to mineralization. or sulphate loss 
+   ldn_N = recs * self%mbnnrate * nnb_gswitch * (1.0_rk-oxb_switch) * self%den_frac_denann    ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox
+   annm = recs * self%mbnnrate * nnb_gswitch * aab * aab / (0.001_rk + aab * aab) * (1.0_rk-oxb_switch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox  ! [aab is not defined]
+   ldn_S = recs * self%mbsrate * (1.0_rk - nnb_gswitch) * (1.0_rk-oxb_switch)        ! Mineralization rate by sulphate. starts a bit before nitrate is depleted
+   recs_all = recs * (oxb_switch + ldn_N + annm + ldn_S) ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4). Annamox calculated seperately.
+   ldn_O = recs * (oxb_switch + ldn_S)    ! Oxygen loss due to mineralization. or sulphate loss 
 	
-      ! fracdenitsed = self%fds * oxb_switch         ! denitrification in sediments in fraction of the sediment when there is oxygen
-      pret = self%po4ret  * oxb_switch             ! phosphate is stored with oxygen
-      plib = self%pliberationrate * (1.0_rk-oxb_switch) ! phosphorus is liberated on anoxic condition
+   pret = self%po4ret  * oxb_switch             ! phosphate is stored with oxygen
+   plib = self%pliberationrate * (1.0_rk-oxb_switch) ! phosphorus is liberated on anoxic condition
       
-   oxlim = max (0.0_rk,oxb) * max (0.0_rk,oxb) / (0.01_rk + max(0.0_rk,oxb) * max(0.0_rk,oxb))
-
+  
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (carbon)
-   _SET_BOTTOM_ODE_(self%id_fl_c,-llsd * fl_c + llds * ddb_c - biores * fl_c - recs * fl_c - fl_c * self%fl_burialrate) ! Prev version; 2nd order: * fl_c
+   _SET_BOTTOM_ODE_(self%id_fl_c,-llsd * fl_c + llds * ddb_c - biores * fl_c - recs_all * fl_c - fl_c * self%fl_burialrate) ! Prev version; 2nd order: * fl_c
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (phosphorus)
-   _SET_BOTTOM_ODE_(self%id_fl_p,-llsd * fl_p + llds * ddb_p - biores * fl_p - recs * fl_p - fl_p * self%fl_burialrate) ! Prev version; 2nd order: * fl_p
+   _SET_BOTTOM_ODE_(self%id_fl_p,-llsd * fl_p + llds * ddb_p - biores * fl_p - recs_all * fl_p - fl_p * self%fl_burialrate) ! Prev version; 2nd order: * fl_p
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (nitrogen)
-   _SET_BOTTOM_ODE_(self%id_fl_n,-llsd * fl_n + llds * ddb_n - biores * fl_n - recs * fl_n - fl_n * self%fl_burialrate) ! Prev version; 2nd order: * fl_n
+   _SET_BOTTOM_ODE_(self%id_fl_n,-llsd * fl_n + llds * ddb_n - biores * fl_n - recs_all * fl_n - fl_n * self%fl_burialrate) ! Prev version; 2nd order: * fl_n
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (silica)
-   _SET_BOTTOM_ODE_(self%id_fl_si,-llsd * fl_si + llds * ddb_si - biores * fl_si - recs * fl_si - fl_si * self%fl_burialrate) ! Prev version; 2nd order: * fl_si
+   _SET_BOTTOM_ODE_(self%id_fl_si,-llsd * fl_si + llds * ddb_si - biores * fl_si - recs_all * fl_si - fl_si * self%fl_burialrate) ! Prev version; 2nd order: * fl_si
    ! P-Fe resuspension, sedimentation, bio-resuspension, liberation, retention and burial
-   _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb - plib * pb + recs * fl_p * pret * oxlim - pbr * self%pburialrate) ! Prev version; 2nd order: * fl_c
+   _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb - plib * pb + recs_all * fl_p * pret * oxb_gswitch - pbr * self%pburialrate) ! Prev version; 2nd order: * fl_c
 
    ! Denitrification in sediments
    _SET_BOTTOM_EXCHANGE_(self%id_nn,-5.3_rk * ldn_N * fl_n - 13.25_rk * annm * fl_n)
@@ -408,9 +404,9 @@ s *#include "fabm_driver.h"
    ! Ammonium production due to mineralization (oxic & anoxic)
    _SET_BOTTOM_EXCHANGE_(self%id_aa, (ldn_S + oxb_switch * recs * ( 1.0_rk - 5.3_rk * self%fds) - 12.25_rk * annm) * fl_n)
    ! Phosphate production due to mineralization (retention if oxic) and release in anoxic
-   _SET_BOTTOM_EXCHANGE_(self%id_po, (1.0_rk - pret * oxlim) * recs * fl_p + plib * pb)
+   _SET_BOTTOM_EXCHANGE_(self%id_po, (1.0_rk - pret * oxb_gswitch) * recs * fl_p + plib * pb)
    ! Silica production due to mineralization
-   _SET_BOTTOM_EXCHANGE_(self%id_si, recs * fl_si)
+   _SET_BOTTOM_EXCHANGE_(self%id_si, recs_all * fl_si)
    ! Sediment resuspension, detritus settling, bio-resuspension (carbon)
    _SET_BOTTOM_EXCHANGE_(self%id_dd_c, llsd * fl_c -llds * ddb_c + biores * fl_c)
    ! Sediment resuspension, detritus settling, bio-resuspension (phosphorus)
@@ -422,10 +418,11 @@ s *#include "fabm_driver.h"
    ! P-Fe resuspension, settling and bio-resuspension
    _SET_BOTTOM_EXCHANGE_(self%id_pw, bpsd * pb -bpds * pwb + biores * pb)
 
-   if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs * fl_c)
+   if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs_all * fl_c)
 
    ! BENTHIC DIAGNOSTIC VARIABLES
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(ldn_N * recs * fl_n + fracdenitsed * recs * fl_n) * secs_per_day)
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(84.8_rk * (ldn_N + oxb_switch * self%fds * recs) * fl_n) * secs_per_day) ! 42.4 N2 per 1 mole detritus
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANM,(424_rk * annm * fl_n) * secs_per_day)                                    ! 212 N2 per 1 mole detritus
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
 
