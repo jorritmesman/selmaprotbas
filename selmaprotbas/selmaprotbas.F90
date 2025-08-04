@@ -229,7 +229,7 @@ s *#include "fabm_driver.h"
 ! !LOCAL VARIABLES:
     real(rk)           :: aa,nn,po,dd_c,dd_p,dd_n,dd_si,o2,si
     real(rk)           :: temp,ldn,nf
-    real(rk)           :: otemp,ldn_N,ldn_O,ldn_S,ade,annm
+    real(rk)           :: otemp,ldn_N,ldn_O,ldn_S,ade,anmx
     real(rk),parameter :: p_molar_mass = 30.973761_rk ! molar mass of phosphorus
     real(rk),parameter :: n_molar_mass =  14.0067_rk ! molar mass of nitrogen
     real(rk),parameter :: o2_molar_mass =  31.9988_rk ! molar mass of O2
@@ -268,23 +268,23 @@ s *#include "fabm_driver.h"
       	 ! Source for chemolithoautotrophic denitrification: Schmidt & Eggert (2012). A regional 3D coupled ecosystem model of the Benguela upwelling system. Marine Science Reports, 87
 	 ! process rates in the different o2, no3 levels  [should all processes be multiplied by ldn instead of below ??]   
          ldn_N = nn_gswitch * (1.0_rk-o2_switch) * self%den_frac_denann   ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox [most probbale the right thinf is to add process rate]
-         annm = nn_gswitch * aa * aa / (0.001_rk + aa * aa) * (1.0_rk-o2_switch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox         
+         anmx = nn_gswitch * aa * aa / (0.001_rk + aa * aa) * (1.0_rk-o2_switch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox         
          ldn_S = self%mbsrate * (1.0_rk - nn_gswitch) * (1.0_rk-o2_switch)        ! Mineralization rate with sulphate. starts a bit before nitrate is depleted
          ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * (1.0_rk -o2_switch)  ! ade rate nitrate dependent
 	 ldn = self%dn * exp (self%q10_rec*temp) * (o2_switch + ldn_N + ldn_S) ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4). Annamox calculated seperately.
          ldn_O = o2_switch * ldn + ldn_S      ! Oxygen loss rate due to mineralization. 
 
       _SET_ODE_(self%id_o2, ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk) 
-      _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - 12.25_rk * annm * dd_n)
-      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * nn_gswitch * (1.0_rk-o2_switch) * dd_n - ade * nn - 13.25_rk * annm * dd_n) ! check again switch
-      _SET_ODE_(self%id_po, (ldn + annm) * dd_p) 
-      _SET_ODE_(self%id_si, (ldn + annm) * dd_si)
-      _SET_ODE_(self%id_dd_c, - (ldn + annm) * dd_c)
-      _SET_ODE_(self%id_dd_p, - (ldn + annm) * dd_p)
-      _SET_ODE_(self%id_dd_n, - (ldn + annm) * dd_n)
-      _SET_ODE_(self%id_dd_si, - (ldn + annm) * dd_si)
+      _SET_ODE_(self%id_aa, ldn * dd_n - nf * aa - 12.25_rk * anmx * dd_n)
+      _SET_ODE_(self%id_nn, nf * aa - 5.3_rk * ldn * nn_gswitch * (1.0_rk-o2_switch) * dd_n - ade * nn - 13.25_rk * anmx * dd_n) ! check again switch
+      _SET_ODE_(self%id_po, (ldn + anmx) * dd_p) 
+      _SET_ODE_(self%id_si, (ldn + anmx) * dd_si)
+      _SET_ODE_(self%id_dd_c, - (ldn + anmx) * dd_c)
+      _SET_ODE_(self%id_dd_p, - (ldn + anmx) * dd_p)
+      _SET_ODE_(self%id_dd_n, - (ldn + anmx) * dd_n)
+      _SET_ODE_(self%id_dd_si, - (ldn + anmx) * dd_si)
 
-      if (_AVAILABLE_(self%id_dic)) _SET_ODE_(self%id_dic, (ldn + annm) * dd_c)
+      if (_AVAILABLE_(self%id_dic)) _SET_ODE_(self%id_dic, (ldn + anmx) * dd_c)
 
       _SET_DIAGNOSTIC_(self%id_NO3, nn * n_molar_mass)
       _SET_DIAGNOSTIC_(self%id_NH4, aa * n_molar_mass)
@@ -377,9 +377,9 @@ s *#include "fabm_driver.h"
    
    ! Mineralization rates (see description of pelagic part)
    ldn_N = recs * self%mbnnrate * nnb_gswitch * (1.0_rk-oxb_switch) * self%den_frac_denann    ! Denitrification rate depends on nitrate availability and fraction of denitrification+annamox
-   annm = recs * self%mbnnrate * nnb_gswitch * aab * aab / (0.001_rk + aab * aab) * (1.0_rk-oxb_switch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox  ! [aab is not defined]
+   anmx = recs * self%mbnnrate * nnb_gswitch * aab * aab / (0.001_rk + aab * aab) * (1.0_rk-oxb_gswitch)*(1.0_rk - self%den_frac_denann) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+annamox  ! [aab is not defined]
    ldn_S = recs * self%mbsrate * (1.0_rk - nnb_gswitch) * (1.0_rk-oxb_switch)        ! Mineralization rate by sulphate. starts a bit before nitrate is depleted
-   recs_all = recs * (oxb_switch + ldn_N + annm + ldn_S) ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4). Annamox calculated seperately.
+   recs_all = recs * (oxb_switch + ldn_N + anmx + ldn_S) ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4). Annamox calculated seperately.
    ldn_O = recs * (oxb_switch + ldn_S)    ! Oxygen loss due to mineralization. or sulphate loss 
 	
    pret = self%po4ret  * oxb_switch             ! phosphate is stored with oxygen
@@ -398,11 +398,11 @@ s *#include "fabm_driver.h"
    _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb - plib * pb + recs_all * fl_p * pret * oxb_gswitch - pbr * self%pburialrate) ! Prev version; 2nd order: * fl_c
 
    ! Denitrification in sediments
-   _SET_BOTTOM_EXCHANGE_(self%id_nn,-5.3_rk * ldn_N * fl_n - 13.25_rk * annm * fl_n)
+   _SET_BOTTOM_EXCHANGE_(self%id_nn,-5.3_rk * ldn_N * fl_n - 13.25_rk * anmx * fl_n)
    ! Oxygen consumption due to mineralization and denitrification
    _SET_BOTTOM_EXCHANGE_(self%id_o2, (-ldn_O - 1.6_rk * self%fds * recs - ldn_S ) * fl_c)
    ! Ammonium production due to mineralization (oxic & anoxic)
-   _SET_BOTTOM_EXCHANGE_(self%id_aa, (ldn_S + oxb_switch * recs * ( 1.0_rk - 5.3_rk * self%fds) - 12.25_rk * annm) * fl_n)
+   _SET_BOTTOM_EXCHANGE_(self%id_aa, (ldn_S + oxb_switch * recs * ( 1.0_rk - 5.3_rk * self%fds) - 12.25_rk * anmx) * fl_n)
    ! Phosphate production due to mineralization (retention if oxic) and release in anoxic
    _SET_BOTTOM_EXCHANGE_(self%id_po, (1.0_rk - pret * oxb_gswitch) * recs * fl_p + plib * pb)
    ! Silica production due to mineralization
@@ -421,8 +421,8 @@ s *#include "fabm_driver.h"
    if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs_all * fl_c)
 
    ! BENTHIC DIAGNOSTIC VARIABLES
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(84.8_rk * (ldn_N + oxb_switch * self%fds * recs) * fl_n) * secs_per_day) ! 42.4 N2 per 1 mole detritus
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANM,(424_rk * annm * fl_n) * secs_per_day)                                    ! 212 N2 per 1 mole detritus
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * (ldn_N + oxb_switch * self%fds * recs) * fl_n) * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANM,(26.5_rk * anmx * fl_n) * secs_per_day)                                    ! 212 N2 per 1 mole fluf_n
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
 
