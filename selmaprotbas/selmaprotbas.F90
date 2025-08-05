@@ -31,8 +31,8 @@ s *#include "fabm_driver.h"
 !
 !  Revision history:
 !  September 2015, by Dennis Trolle (AU):
-!  Implemented a switch for choosing between fresh and marine (default) environments.
-!  If "fresh" is selected, oxygen debt (negative O2) due to H2S production is disabled.
+!  Implemented a switch for choosing between nonsulphidic (fresh) and sulphidic (marine, default) environments.
+!  If "nonsulphidic" is selected, oxygen debt (negative O2) due to H2S production is disabled.
 !  Added a sediment burial process, and a range of additional diagnostic variables to output, 
 !  incl. chlorophyll a, oxygen and nutrients in mass concentration units. 
 !  Updated yaml input file with new entries (e.g., sediment burial rate, and phytoplankton
@@ -91,7 +91,7 @@ s *#include "fabm_driver.h"
       real(rk) :: fl_burialrate,pburialrate,pliberationrate,ipo4th,br0,fds,pvel,tau_crit
       real(rk) :: o2_switch, nn_switch, oxb_switch, nnb_switch ,nn_gswitch
       integer  :: newflux
-      character(len=16) :: env_type ! identifier for setting the environment to "marine" or "fresh" (freshwater/lake) 
+      character(len=16) :: env_type ! identifier for setting the environment to "sulphidic" or "nonsulphidic" (replaces former marine/fresh)
    contains
       procedure :: initialize
       procedure :: do
@@ -120,7 +120,7 @@ s *#include "fabm_driver.h"
    real(rk),parameter :: secs_per_day = 86400._rk
    real(rk) :: wdz,wpo4,kc
    
-   call self%get_parameter(self%env_type, 'env_type', 'Define environment type, either fresh or marine', default='marine') 
+   call self%get_parameter(self%env_type, 'env_type', 'Define environment type, either nonsulphidic or sulphidic', default='sulphidic') 
    call self%get_parameter(wdz,     'wdz',   'm/d',  'vertical velocity of detritus (positive: upwards/floating, negative: downwards/sinking)', default=-4.5_rk)
    call self%get_parameter(wpo4,    'wpo4',  'm/d',  'vertical velocity of suspended P-Fe (positive: upwards/floating, negative: downwards/sinking)', default=-1.0_rk)
    call self%get_parameter(self%dn,      'dn',      '1/d', 'detritus mineralization rate', default=0.003_rk, scale_factor=1.0_rk/secs_per_day)
@@ -158,7 +158,7 @@ s *#include "fabm_driver.h"
    call self%register_state_variable(self%id_nn,'nn','mmol N/m3', 'nitrate', minimum=0.0_rk,no_river_dilution=.true.)
    call self%register_state_variable(self%id_po,'po','mmol P/m3', 'phosphate', minimum=0.0_rk,no_river_dilution=.true.)
    call self%register_state_variable(self%id_si,'si','mmol Si/m3', 'silica', minimum=0.0_rk,no_river_dilution=.true.)
-   if (self%env_type .eq. "fresh") then
+   if (self%env_type .eq. "nonsulphidic") then
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', minimum=0.0_rk,no_river_dilution=.true.)
    else
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', no_river_dilution=.true.)
