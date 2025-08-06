@@ -129,7 +129,7 @@ s *#include "fabm_driver.h"
    call self%get_parameter(self%q10_rec, 'q10_rec', '1/K', 'temperature dependence of detritus remineralization', default=0.15_rk)
    call self%get_parameter(self%ade_r0,  'ade_r0',  '1/d', 'maximum chemolithoautotrophic denitrification rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%alphaade,'alphaade','mmol N/m3', 'half-saturation constant for chemolithoautotrophic denitrification', default=1.0_rk)
-   call self%get_parameter(self%mbsrate,  'mbsrate','-', 'mineralization by sulfate rate relative to mineralization by oxygen', default=0.1_rk)
+   call self%get_parameter(self%mbsrate,  'mbsrate','-', 'mineralization by sulphate rate relative to mineralization by oxygen', default=0.1_rk)
    call self%get_parameter(self%mbnnrate,  'mbnnrate','-', 'mineralization by nitrate rate relative to mineralization by oxygen', default=0.1_rk)
    call self%get_parameter(self%den_frac_denanmx, den_frac_denanmx','-', 'relative contribution of denitrification out of total denitrification + anammox', default= 1_rk)
    call self%get_parameter(self%den_frac_denanmx_sed, den_frac_denanmx_sed','-', 'relative contribution of denitrification out of total denitrification + anammox in sediment', default= 1_rk)
