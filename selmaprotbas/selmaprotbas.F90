@@ -483,9 +483,7 @@ end function gradual_switch
 !-----------------------------------------------------------------------
 !BOC
    tk=(t+kelvin)*0.01_rk
-   osat_weiss=exp(aa1+aa2/tk+a3*log(tk)+a4*tk    &
-              +s*(b1+(b2+b3*tk)*tk))*mol_per_liter
-
+   osat_weiss=exp(aa1+aa2/tk+a3*log(tk)+a4*tk+s*(b1+(b2+b3*tk)*tk))*mol_per_liter
    end function osat_weiss
 !EOC
 !-----------------------------------------------------------------------
