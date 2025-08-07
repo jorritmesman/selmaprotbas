@@ -104,6 +104,18 @@ s *#include "fabm_driver.h"
    CONTAINS
 
 !-----------------------------------------------------------------------
+pure function switch01(x) result(s)
+  real(rk), intent(in) :: x
+  real(rk) :: s
+  s = merge(0.0_rk, 1.0_rk, x > 0.0_rk)
+end function switch01
+
+pure function gradual_switch(x, c1) result(s)
+  real(rk), intent(in) :: x, c1
+  real(rk) :: s
+  s = x * x / (c1 + x * x)
+end function gradual_switch
+
 !BOP
 !
 ! !IROUTINE: Initialise the selma model
@@ -260,9 +272,9 @@ s *#include "fabm_driver.h"
 
       _GET_(self%id_temp,temp)
 
-      o2_switch = merge(0.0_rk, 1.0_rk, o2 > 0.0_rk)  
-      nn_switch = merge(0.0_rk, 1.0_rk, nn > 0.0_rk)
-      nn_gswitch = nn * nn / (0.001_rk + nn * nn)    ! nitrate gradual switch - processes slow down when there is little nitrate
+      o2_switch = switch01(o2)  
+      nn_switch = switch01(nn)
+      nn_gswitch = gradual_switch(nn, 0.001_rk)   ! nitrate gradual switch - processes slow down when there is little nitrate
 
       !!!! NITRIFICATION RATE !!!!
       otemp = max(0.0_rk, o2) !for oxygen dependent process if o2<0 then o2=0
@@ -276,7 +288,7 @@ s *#include "fabm_driver.h"
       ldn_N = ldn * nn_gswitch * (1.0_rk-o2_switch) * self%den_frac_denanmx   ! Denitrification rate depends on nitrate availability and fraction of denitrification+anammox
       anmx = ldn * self%mbnnrate * nn_gswitch * aa * aa / (0.001_rk + aa * aa) * (1.0_rk-o2_switch)*(1.0_rk - self%den_frac_denanmx) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+anammox         
       ldn_S = ldn * self%mbsrate * (1.0_rk - nn_gswitch) * (1.0_rk-o2_switch)        ! Mineralization rate with sulphate. starts a bit before nitrate is depleted
-      ade = self%ade_r0 * nn * nn / (self%alphaade +  nn * nn) * (1.0_rk -o2_switch)  ! ade rate nitrate dependent
+      ade = self%ade_r0 * gradual_switch(nn, self%alphaade) * (1.0_rk -o2_switch)  ! ade rate nitrate dependent
       ldn_all = ldn * o2_switch + ldn_N + anmx + ldn_S ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4).
       ldn_O = ldn * o2_switch + ldn_S      ! Oxygen loss rate due to mineralization. 
 
@@ -351,10 +363,10 @@ s *#include "fabm_driver.h"
    _GET_HORIZONTAL_(self%id_taub,taub)
    _GET_(self%id_temp,temp)
 
-   oxb_switch = merge(0.0_rk, 1.0_rk, oxb > 0.0_rk)
-   oxb_gswitch = max (0.0_rk,oxb) * max (0.0_rk,oxb) / (0.01_rk + max(0.0_rk,oxb) * max(0.0_rk,oxb))   ! oxygen gradual switch = oxygen limitation (was oxlim)
-   nnb_switch = merge(0.0_rk, 1.0_rk, nnb > 0.0_rk)
-   nnb_gswitch = nnb * nnb / (0.001_rk + nnb * nnb)    ! nitrate gradual switch - processes slow down when there is little nitrate
+   oxb_switch = switch01(oxb)
+   oxb_gswitch = gradual_switch(max (0.0_rk,oxb), 0.01_rk) ! oxygen gradual switch = oxygen limitation (was oxlim)
+   nnb_switch = switch01(nnb)
+   nnb_gswitch = gradual_switch(nnb,0.001_rk)    ! nitrate gradual switch - processes slow down when there is little nitrate
 
    !increased phosphorus burial
    pbr = max(pb, pb * (pb -self%ipo4th + 1.0_rk)) 
@@ -362,7 +374,7 @@ s *#include "fabm_driver.h"
    !bio-resuspension rate
    ! Source: Neumann & Schernewski, 2008, doi:10.1016/j.jmarsys.2008.05.003
    oxb_pos = max(0.0_rk, oxb)   
-   biores = self%br0 * oxb_pos * oxb_pos / (oxb_pos * oxb_pos + 0.03_rk)  
+   biores = self%br0 * gradual_switch(oxb_pos,0.03_rk)
 
    ! Resuspension-sedimentation rate are computed as in GOTM-BIO
   
