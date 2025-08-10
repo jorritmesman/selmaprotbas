@@ -1,4 +1,4 @@
-s *#include "fabm_driver.h"
+*#include "fabm_driver.h"
 
 !-----------------------------------------------------------------------
 !BOP
@@ -172,6 +172,7 @@ end function gradual_switch
    call self%register_state_variable(self%id_si,'si','mmol Si/m3', 'silica', minimum=0.0_rk,no_river_dilution=.true.)
    if (self%env_type .eq. "nonsulphidic") then
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', minimum=0.0_rk,no_river_dilution=.true.)
+      self%mbsrate = 0.0_rk                   # no mineralization with sulphide
    else
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', no_river_dilution=.true.)
    end if
@@ -286,7 +287,7 @@ end function gradual_switch
       	 ! Source for chemolithoautotrophic denitrification: Schmidt & Eggert (2012). A regional 3D coupled ecosystem model of the Benguela upwelling system. Marine Science Reports, 87
 	 ! process rates 
       ldn_N = ldn * nn_gswitch * (1.0_rk-o2_switch) * self%den_frac_denanmx   ! Denitrification rate depends on nitrate availability and fraction of denitrification+anammox
-      anmx = ldn * self%mbnnrate * nn_gswitch * aa * aa / (0.001_rk + aa * aa) * (1.0_rk-o2_switch)*(1.0_rk - self%den_frac_denanmx) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+anammox         
+      anmx = ldn * self%mbnnrate * nn_gswitch * gradual_switch(aa, 0.001_rk) * (1.0_rk-o2_switch)*(1.0_rk - self%den_frac_denanmx) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+anammox         
       ldn_S = ldn * self%mbsrate * (1.0_rk - nn_gswitch) * (1.0_rk-o2_switch)        ! Mineralization rate with sulphate. starts a bit before nitrate is depleted
       ade = self%ade_r0 * gradual_switch(nn, self%alphaade) * (1.0_rk -o2_switch)  ! ade rate nitrate dependent
       ldn_all = ldn * o2_switch + ldn_N + anmx + ldn_S ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4).
@@ -441,8 +442,8 @@ end function gradual_switch
    if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs_all * fl_c)
 
    ! BENTHIC DIAGNOSTIC VARIABLES
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_,(5.3_rk * (ldn_N + oxb_switch * self%fds * recs) * fl_n) * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(26.5_rk * anmx * fl_n) * secs_per_day)                                    ! 212 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * (ldn_N + oxb_switch * self%fds * recs) * fl_n) * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(26.5_rk * anmx * fl_n) * secs_per_day)                                 ! 212 N2 per 1 mole fluf_n
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
 
