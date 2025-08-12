@@ -246,7 +246,7 @@ end function gradual_switch
 ! !LOCAL VARIABLES:
     real(rk)           :: aa,nn,po,dd_c,dd_p,dd_n,dd_si,o2,si
     real(rk)           :: temp,ldn,nf
-    real(rk)           :: otemp,ldn_N,ldn_O,ldn_S,ade,anmx
+    real(rk)           :: o2_pos,ldn_N,ldn_O,ldn_S,ade,anmx
     real(rk),parameter :: p_molar_mass = 30.973761_rk ! molar mass of phosphorus
     real(rk),parameter :: n_molar_mass =  14.0067_rk ! molar mass of nitrogen
     real(rk),parameter :: o2_molar_mass =  31.9988_rk ! molar mass of O2
@@ -278,9 +278,9 @@ end function gradual_switch
       nn_gswitch = gradual_switch(nn, 0.001_rk)   ! nitrate gradual switch - processes slow down when there is little nitrate
 
       !!!! NITRIFICATION RATE !!!!
-      otemp = max(0.0_rk, o2) !for oxygen dependent process if o2<0 then o2=0
+      o2_pos = max(0.0_rk, o2) !for oxygen dependent process if o2<0 then o2=0
       ! Nitrification rate depends on oxygen availability and temperature
-      nf = otemp / (0.01_rk + otemp) * 0.1_rk * exp (0.11_rk * temp)/secs_per_day
+      nf = o2_pos / (0.01_rk + o2_pos) * 0.1_rk * exp (0.11_rk * temp)/secs_per_day
 
       ! Mineralization rate depends on temperature
       ldn = self%dn * exp (self%q10_rec*temp)
