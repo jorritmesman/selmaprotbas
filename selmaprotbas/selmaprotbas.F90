@@ -86,10 +86,9 @@
 
       ! Model parameters
       real(rk) :: nb,deltao,nue,sigma_b,dn,dn_sed
-      real(rk) :: q10_rec,ade_r0,alphaade,q10_recs,mbsrate,mbnnrate,den_frac_denanmx
+      real(rk) :: q10_rec,ade_r0,alphaade,q10_recs,mbsrate,mbnnrate,den_frac_denanmx,den_frac_denanmx_sed
       real(rk) :: sedrate,erorate,sedratepo4,eroratepo4,po4ret
       real(rk) :: fl_burialrate,pburialrate,pliberationrate,ipo4th,br0,fds,pvel,tau_crit
-      real(rk) :: o2_switch, nn_switch, oxb_switch, nnb_switch ,nn_gswitch
       integer  :: newflux
       character(len=16) :: env_type ! identifier for setting the environment to "marine" or "fresh" (fresh disables mineralization with sulphate)
    contains
@@ -141,10 +140,9 @@ end function gradual_switch
    call self%get_parameter(self%q10_rec, 'q10_rec', '1/K', 'temperature dependence of detritus remineralization', default=0.15_rk)
    call self%get_parameter(self%ade_r0,  'ade_r0',  '1/d', 'maximum chemolithoautotrophic denitrification rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%alphaade,'alphaade','mmol N/m3', 'half-saturation constant for chemolithoautotrophic denitrification', default=1.0_rk)
-   call self%get_parameter(self%mbsrate,  'mbsrate','-', 'mineralization by sulphate rate relative to mineralization by oxygen', default=0.1_rk)
    call self%get_parameter(self%mbnnrate,  'mbnnrate','-', 'mineralization by nitrate rate relative to mineralization by oxygen', default=0.1_rk)
-   call self%get_parameter(self%den_frac_denanmx, 'den_frac_denanmx','-', 'relative contribution of denitrification out of total denitrification + anammox', default= 1_rk)
-   call self%get_parameter(self%den_frac_denanmx_sed, 'den_frac_denanmx_sed','-', 'relative contribution of denitrification out of total denitrification + anammox in sediment', default= 1_rk)
+   call self%get_parameter(self%den_frac_denanmx, 'den_frac_denanmx','-', 'relative contribution of denitrification out of total denitrification + anammox', default=1.0_rk)
+   call self%get_parameter(self%den_frac_denanmx_sed, 'den_frac_denanmx_sed','-', 'relative contribution of denitrification out of total denitrification + anammox in sediment', default=1.0_rk)
    call self%get_parameter(self%q10_recs,'q10_recs','1/K', 'temperature dependence of sediment remineralization', default=0.175_rk)
    call self%get_parameter(self%tau_crit,'tau_crit','N/m2', 'critical shear stress', default=0.07_rk)
    call self%get_parameter(self%sedrate, 'sedrate', 'm/d', 'detritus sedimentation rate', default=2.25_rk, scale_factor=1.0_rk/secs_per_day)
@@ -172,9 +170,10 @@ end function gradual_switch
    call self%register_state_variable(self%id_si,'si','mmol Si/m3', 'silica', minimum=0.0_rk,no_river_dilution=.true.)
    if (self%env_type .eq. "fresh") then
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', minimum=0.0_rk,no_river_dilution=.true.)
-      self%mbsrate = 0.0_rk                   # no mineralization with sulphate
+      call self%get_parameter(self%mbsrate,  'mbsrate','-', 'mineralization by sulphate rate relative to mineralization by oxygen, default = 0.0 for freshwater, 0.1 for marine', default=0.0_rk)
    else
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', no_river_dilution=.true.)
+	  call self%get_parameter(self%mbsrate,  'mbsrate','-', 'mineralization by sulphate rate relative to mineralization by oxygen, default = 0.0 for freshwater, 0.1 for marine', default=0.1_rk)
    end if
    call self%register_state_variable(self%id_fl_c,'fl_c','mmol C/m2', 'carbon fluff', minimum=0.0_rk)
    call self%register_state_variable(self%id_fl_p,'fl_p','mmol P/m2', 'phosphorus fluff', minimum=0.0_rk)
@@ -246,7 +245,7 @@ end function gradual_switch
 ! !LOCAL VARIABLES:
     real(rk)           :: aa,nn,po,dd_c,dd_p,dd_n,dd_si,o2,si
     real(rk)           :: temp,ldn,nf
-    real(rk)           :: o2_pos,ldn_N,ldn_O,ldn_S,ade,anmx
+    real(rk)           :: o2_pos,ldn_N,ldn_O,ldn_S,ldn_all,ade,anmx
     real(rk),parameter :: p_molar_mass = 30.973761_rk ! molar mass of phosphorus
     real(rk),parameter :: n_molar_mass =  14.0067_rk ! molar mass of nitrogen
     real(rk),parameter :: o2_molar_mass =  31.9988_rk ! molar mass of O2
@@ -254,6 +253,7 @@ end function gradual_switch
     real(rk),parameter :: si_molar_mass =  60.0843_rk ! molar mass of Si
     real(rk),parameter :: epsilon = 0.00000000001_rk
     real(rk),parameter :: secs_per_day = 86400._rk
+	real(rk)		   :: o2_switch,nn_switch,nn_gswitch
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -293,10 +293,10 @@ end function gradual_switch
       ldn_all = ldn * o2_switch + ldn_N + anmx + ldn_S ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4).
       ldn_O = ldn * o2_switch + ldn_S      ! Oxygen loss rate due to mineralization. 
 
-      _SET_ODE_(self%id_o2, ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk) 
-      _SET_ODE_(self%id_aa, (ldn +ldn_S - 12.25_rk * anmx) * dd_n - nf * aa
-      _SET_ODE_(self%id_nn, nf * aa - ade * nn - (5.3_rk * ldn_N + 13.25_rk * anmx) * dd_n
-      _SET_ODE_(self%id_po, (ldn_all) * dd_p) 
+      _SET_ODE_(self%id_o2, ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk)
+      _SET_ODE_(self%id_aa, (ldn +ldn_S - 12.25_rk * anmx) * dd_n - nf * aa)
+      _SET_ODE_(self%id_nn, nf * aa - ade * nn - (5.3_rk * ldn_N + 13.25_rk * anmx) * dd_n)
+      _SET_ODE_(self%id_po, (ldn_all) * dd_p)
       _SET_ODE_(self%id_si, (ldn_all) * dd_si)
       _SET_ODE_(self%id_dd_c, - (ldn_all) * dd_c)
       _SET_ODE_(self%id_dd_p, - (ldn_all) * dd_p)
@@ -334,9 +334,10 @@ end function gradual_switch
 !
 ! !LOCAL VARIABLES:
    real(rk)                   :: pwb,pb,fl_c,fl_p,fl_n,fl_si,nnb,aab,ddb_c,ddb_p,ddb_n,ddb_si,oxb,taub,temp,biores
-   real(rk)                   :: llds,llsd,bpds,bpsd,recs,recs_all,ldn_O,ldn_N,plib,oxb_gswitch,oxb_pos
+   real(rk)                   :: llds,llsd,bpds,bpsd,recs,recs_all,ldn_O,ldn_N,ldn_S,plib,oxb_pos,anmx
    real(rk)                   :: fracdenitsed,pret,pbr
    real(rk)                   :: tau_frac
+   real(rk)					  :: oxb_switch,oxb_gswitch,nnb_switch,nnb_gswitch
    real(rk),parameter :: secs_per_day = 86400._rk
 !
 !EOP
