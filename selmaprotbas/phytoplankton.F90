@@ -118,11 +118,11 @@
    call self%get_parameter(self%vert_vel_nutrient,   'vert_vel_nutrient',    'm/d',   'vertical velocity at nutrient limitation below buoy_nutrient_limit, if buoyancy_regulation = true', default=self%vert_vel4*secs_per_day, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%rfr,   'rfr',   'mol P/mol C', 'phosphorus : carbon ratio in phytoplankton',         default=1.0_rk/106.0_rk)
    call self%get_parameter(self%rfn,   'rfn',   'mol N/mol C', 'nitrogen : carbon ratio in phytoplankton',             default=16.0_rk/106.0_rk)
-   call self%get_parameter(self%rfs,   'rfs',   'mol Si/mol C', 'silica : carbon ratio in phytoplankton',            default=0.000_rk)
+   call self%get_parameter(self%rfs,   'rfs',   'mol Si/mol C', 'silicon : carbon ratio in phytoplankton',            default=0.000_rk)
    call self%get_parameter(self%alpha, 'alpha', 'mmol C/m3',   'half-saturation for nutrient uptake', default=1.65625_rk)
    call self%get_parameter(self%alpha_n, 'alpha_n', 'mmol C/m3',   'half-saturation for nitrogen uptake', default=self%alpha)
    call self%get_parameter(self%alpha_p, 'alpha_p', 'mmol C/m3',   'half-saturation for phosphorus uptake', default=self%alpha)
-   call self%get_parameter(self%alpha_si, 'alpha_si', 'mmol C/m3',   'half-saturation for silica uptake', default=self%alpha)
+   call self%get_parameter(self%alpha_si, 'alpha_si', 'mmol C/m3',   'half-saturation for silicon uptake', default=self%alpha)
    call self%get_parameter(self%r0, 'r0',    '1/d', 'maximum growth rate; tlim=1 - at 0 degC and 2*r0 at temp>>sqrt(tll); tlim=2 - at temp>>tll; tlim=3 or 4 - at 20 degC; tlim=5 - at temp_opt',  default=1.3_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%nitrogen_fixation,    'nitrogen_fixation', '', 'whether nitrogen fixation is used to acquire nitrogen', default=.false.)
    call self%get_parameter(self%buoyancy_regulation,    'buoyancy_regulation', '', 'whether cells can regulate vertical movement', default=.false.)
@@ -169,11 +169,11 @@
    call self%register_state_dependency(self%id_nn, 'nn', 'mmol N/m3', 'nitrate')
    call self%register_state_dependency(self%id_o2, 'o2', 'mmol O2/m3','oxygen')
    call self%register_state_dependency(self%id_po, 'po', 'mmol P/m3', 'phosphate')
-   call self%register_state_dependency(self%id_si, 'si', 'mmol Si/m3', 'silica') ! there need to be the coupling in fabm.yaml with the selmaprotbas.F90 script
+   call self%register_state_dependency(self%id_si, 'si', 'mmol Si/m3', 'silicon') ! there need to be the coupling in fabm.yaml with the selmaprotbas.F90 script
    call self%register_state_dependency(self%id_dd_c, 'dd_c', 'mmol C/m3', 'carbon detritus')
    call self%register_state_dependency(self%id_dd_p, 'dd_p', 'mmol P/m3', 'phosphorus detritus')
    call self%register_state_dependency(self%id_dd_n, 'dd_n', 'mmol N/m3', 'nitrogen detritus')
-   call self%register_state_dependency(self%id_dd_si, 'dd_si', 'mmol Si/m3', 'silica detritus')
+   call self%register_state_dependency(self%id_dd_si, 'dd_si', 'mmol Si/m3', 'silicon detritus')
    call self%register_dependency(self%id_temp, standard_variables%temperature)
    call self%register_dependency(self%id_par,  standard_variables%downwelling_photosynthetic_radiative_flux)
    if (self%use_24h_light) then
@@ -185,7 +185,7 @@
       call self%register_state_dependency(self%id_fl_c, 'fl_c', 'mmol C/m2', 'fluff')
       call self%register_state_dependency(self%id_fl_p, 'fl_p', 'mmol P/m2', 'phosphorus fluff')
       call self%register_state_dependency(self%id_fl_n, 'fl_n', 'mmol N/m2', 'nitrogen fluff')
-      call self%register_state_dependency(self%id_fl_si, 'fl_si', 'mmol Si/m2', 'silica fluff')
+      call self%register_state_dependency(self%id_fl_si, 'fl_si', 'mmol Si/m2', 'silicon fluff')
       call self%register_dependency(self%id_taub, standard_variables%bottom_stress)
    end if
    call self%register_state_dependency(self%id_dic,standard_variables%mole_concentration_of_dissolved_inorganic_carbon, required=.false.)
@@ -193,7 +193,7 @@
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_c, self%rfn)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_c, self%rfr)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_c)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silica',units="mmol/m^3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
+   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m^3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
    call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_c, scale_factor=kc, include_background=.true.)
 
    call self%register_diagnostic_variable(self%id_chla, 'chla','mg chl a/m3', 'chlorophyll concentration')
@@ -241,7 +241,7 @@
       _GET_(self%id_aa,aa) ! ammonium
       _GET_(self%id_nn,nn) ! nitrate
       _GET_(self%id_po,po) ! phosphate
-      _GET_(self%id_si,si) ! silica
+      _GET_(self%id_si,si) ! silicon
       _GET_(self%id_o2,o2) ! oxygen
 
       if (self%use_24h_light) then
@@ -307,7 +307,7 @@
       ptemp = po**2
       plim = ptemp / (self%alpha_p * self%alpha_p * self%rfr * self%rfr + ptemp)
       
-      ! Silica limitation
+      ! Silicon limitation
       ! A small fraction (si_minimal) was added to prevent division by zero in case of a Si concentration of zero and rfs=0.
       ! Note: if si is zero, there is now strong si limitation of phytoplankton groups with rfs>0
       
@@ -459,7 +459,7 @@
           ptemp = po**2
           plim = ptemp / (self%alpha_p * self%alpha_p * self%rfr * self%rfr + ptemp)
          
-          ! Silica limitation
+          ! Silicon limitation
           ! A small fraction (si_minimal) was added to prevent division by zero in case of a Si concentration of zero and rfs=0.
           ! Note: if si is zero, there is now strong si limitation of phytoplankton groups with rfs>0
          

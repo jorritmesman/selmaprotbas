@@ -96,7 +96,7 @@
    call self%get_parameter(c0,       'c0',  'mmol C/m3',   'background concentration',    default=0._rk)
    call self%get_parameter(self%rfr, 'rfr', 'mol P/mol C', 'phosphorus : carbon ratio', default=1.0_rk/106.0_rk)
    call self%get_parameter(self%rfn, 'rfn', 'mol N/mol C', 'nitrogen : carbon ratio',     default=16.0_rk/106.0_rk)
-   call self%get_parameter(self%rfs, 'rfs', 'mol Si/mol C', 'silica : carbon ratio',     default=0.000_rk)
+   call self%get_parameter(self%rfs, 'rfs', 'mol Si/mol C', 'silicon : carbon ratio',     default=0.000_rk)
    call self%register_state_variable(self%id_c,'c','mmol C/m3', 'concentration', minimum=0.0_rk, background_value=c0)
 
    call self%get_parameter(self%nprey, 'nprey', '', 'number of prey', default=1) 
@@ -124,18 +124,18 @@
    ! Register state variables
    call self%register_state_dependency(self%id_aa, 'aa', 'mmol N/m3', 'ammonium')
    call self%register_state_dependency(self%id_po, 'po', 'mmol P/m3', 'phosphate')
-   call self%register_state_dependency(self%id_si, 'si', 'mmol Si/m3', 'silica')
+   call self%register_state_dependency(self%id_si, 'si', 'mmol Si/m3', 'silicon')
    call self%register_state_dependency(self%id_dd_c, 'dd_c', 'mmol C/m3', 'carbon detritus')
    call self%register_state_dependency(self%id_dd_p, 'dd_p', 'mmol P/m3', 'phosphorus detritus')
    call self%register_state_dependency(self%id_dd_n, 'dd_n', 'mmol N/m3', 'nitrogen detritus')
-   call self%register_state_dependency(self%id_dd_si, 'dd_si', 'mmol Si/m3', 'silica detritus')
+   call self%register_state_dependency(self%id_dd_si, 'dd_si', 'mmol Si/m3', 'silicon detritus')
    call self%register_state_dependency(self%id_o2, 'o2', 'mmol O2/m3','oxygen')
 
    ! Contribute to total nitrogen, phosphorus, carbon
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_c, self%rfn)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_c, self%rfr)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_c)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silica',units="mmol/m^3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
+   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m^3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
    
 
    ! Register link to external DIC pool
@@ -274,7 +274,7 @@
          _SET_ODE_(self%id_dd_c, growth_red_net * graz_z * self%pref(iprey) * prey) ! carbon 
          _SET_ODE_(self%id_dd_p, (growth_red_net - growth_red_p) * self%pref(iprey) * graz_z * prey * self%prey_rfr(iprey) + (1.000_rk - growth_red_net) * max(self%prey_rfr(iprey) - self%rfr, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! phosphorus
          _SET_ODE_(self%id_dd_n, (growth_red_net - growth_red_n) * self%pref(iprey) * graz_z * prey * self%prey_rfn(iprey) + (1.000_rk - growth_red_net) * max(self%prey_rfn(iprey) - self%rfn, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! nitrogen
-         _SET_ODE_(self%id_dd_si, (growth_red_net - growth_red_si) * self%pref(iprey) * graz_z * prey * self%prey_rfs(iprey) + (1.000_rk - growth_red_net) * max(self%prey_rfs(iprey) - self%rfs, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! silica
+         _SET_ODE_(self%id_dd_si, (growth_red_net - growth_red_si) * self%pref(iprey) * graz_z * prey * self%prey_rfs(iprey) + (1.000_rk - growth_red_net) * max(self%prey_rfs(iprey) - self%rfs, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! silicon
          
          ! EOSP
          

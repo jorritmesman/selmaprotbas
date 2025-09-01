@@ -8,7 +8,7 @@ does this for multiple layers or cells in the water column. The SELMA model whic
 
 ## Model functionality
 The Selmaprotbas model describes dynamics of:
-- Phosphorus, nitrogen, and silica (sediment, detritus, and dissolved)
+- Phosphorus, nitrogen, and silicon (sediment, detritus, and dissolved)
 - Oxygen concentration
 - An unrestricted amount of phytoplankton and zooplankton groups
 
@@ -29,7 +29,7 @@ All parameters can be accessed in text (YAML) format.
 ### What was changed from the SELMA model?
 #### v1.0
 - The model is now carbon-based, instead of nitrogen-based (i.e. where possible, quantities are now expressed in mmol C, instead of mmol N)
-- A silica cycle was added
+- A silicon cycle was added
 - Variable nutrient ratios in detritus and fluff are now possible, as detritus and fluff are now put in separate variables for each element.
   This could cause problems with mass conservation in SELMA if detritus, sediment, and phytoplankton had not all the same nutrient ratio. 
 - Calculation of chlorophyll is now exclusively based on phytoplankton C content and the Yc parameter (C:Chl ratio)
