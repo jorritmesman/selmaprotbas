@@ -250,7 +250,7 @@ end function gradual_switch
     real(rk),parameter :: n_molar_mass =  14.0067_rk ! molar mass of nitrogen
     real(rk),parameter :: o2_molar_mass =  31.9988_rk ! molar mass of O2
     real(rk),parameter :: h2s_molar_mass =  34.082_rk ! molar mass of H2S
-    real(rk),parameter :: si_molar_mass =  60.0843_rk ! molar mass of Si
+    real(rk),parameter :: si_molar_mass =  28.0855_rk ! molar mass of Si
     real(rk),parameter :: epsilon = 0.00000000001_rk
     real(rk),parameter :: secs_per_day = 86400._rk
 	real(rk)		   :: o2_switch,nn_switch,nn_gswitch

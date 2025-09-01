@@ -123,7 +123,7 @@
    call self%get_parameter(self%alpha_n, 'alpha_n', 'mmol C/m3',   'half-saturation for nitrogen uptake', default=self%alpha)
    call self%get_parameter(self%alpha_p, 'alpha_p', 'mmol C/m3',   'half-saturation for phosphorus uptake', default=self%alpha)
    call self%get_parameter(self%alpha_si, 'alpha_si', 'mmol C/m3',   'half-saturation for silica uptake', default=self%alpha)
-   call self%get_parameter(self%r0,    'r0',    '1/d',         'maximum growth rate at 20 degrees C',  default=1.3_rk, scale_factor=1.0_rk/secs_per_day)
+   call self%get_parameter(self%r0, 'r0',    '1/d', 'maximum growth rate; tlim=1 - at 0 degC and 2*r0 at temp>>sqrt(tll); tlim=2 - at temp>>tll; tlim=3 or 4 - at 20 degC; tlim=5 - at temp_opt',  default=1.3_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%nitrogen_fixation,    'nitrogen_fixation', '', 'whether nitrogen fixation is used to acquire nitrogen', default=.false.)
    call self%get_parameter(self%buoyancy_regulation,    'buoyancy_regulation', '', 'whether cells can regulate vertical movement', default=.false.)
    call self%get_parameter(self%buoy_temperature,    'buoy_temperature', '', 'whether temperature can regulate buoyancy, if buoyancy_regulation is true', default=.false.)
@@ -177,7 +177,7 @@
    call self%register_dependency(self%id_temp, standard_variables%temperature)
    call self%register_dependency(self%id_par,  standard_variables%downwelling_photosynthetic_radiative_flux)
    if (self%use_24h_light) then
-	  call self%register_dependency(self%id_parmean, temporal_mean(self%id_par, period=86400._rk, resolution=3600._rk))
+	  call self%register_dependency(self%id_parmean, temporal_mean(self%id_par,period=86400._rk, resolution=3600._rk))
    end if
    
    if (self%sedrate>0.0_rk) then
@@ -194,7 +194,7 @@
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_c, self%rfr)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_c)
    call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silica',units="mmol/m^3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
-   call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_c, kc, include_background=.true.)
+   call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_c, scale_factor=kc, include_background=.true.)
 
    call self%register_diagnostic_variable(self%id_chla, 'chla','mg chl a/m3', 'chlorophyll concentration')
    call self%register_diagnostic_variable(self%id_GPP,  'GPP', 'mmol/m3/d',   'gross primary production')
