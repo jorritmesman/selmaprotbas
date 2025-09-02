@@ -60,7 +60,7 @@
       type (type_diagnostic_variable_id) :: id_NPP
 
       real(rk) :: alpha_light, imin
-      real(rk) :: alpha, alpha_n, alpha_p, alpha_si
+      real(rk) :: alpha_n, alpha_p, alpha_si
       logical  :: nitrogen_fixation, use_24h_light, mult_llim_nutlim
       logical  :: buoyancy_regulation, buoy_temperature, buoy_nutrient
       real(rk) :: par_limit1, par_limit2, par_limit3, vert_vel1, vert_vel2, vert_vel3, vert_vel4
@@ -119,10 +119,9 @@
    call self%get_parameter(self%rfr,   'rfr',   'mol P/mol C', 'phosphorus : carbon ratio in phytoplankton',         default=1.0_rk/106.0_rk)
    call self%get_parameter(self%rfn,   'rfn',   'mol N/mol C', 'nitrogen : carbon ratio in phytoplankton',             default=16.0_rk/106.0_rk)
    call self%get_parameter(self%rfs,   'rfs',   'mol Si/mol C', 'silicon : carbon ratio in phytoplankton',            default=0.000_rk)
-   call self%get_parameter(self%alpha, 'alpha', 'mmol C/m3',   'half-saturation for nutrient uptake', default=1.65625_rk)
-   call self%get_parameter(self%alpha_n, 'alpha_n', 'mmol C/m3',   'half-saturation for nitrogen uptake', default=self%alpha)
-   call self%get_parameter(self%alpha_p, 'alpha_p', 'mmol C/m3',   'half-saturation for phosphorus uptake', default=self%alpha)
-   call self%get_parameter(self%alpha_si, 'alpha_si', 'mmol C/m3',   'half-saturation for silicon uptake', default=self%alpha)
+   call self%get_parameter(self%alpha_n, 'alpha_n', 'mmol N/m3',   'half-saturation concentration for nitrogen uptake', default=0.25_rk)
+   call self%get_parameter(self%alpha_p, 'alpha_p', 'mmol P/m3',   'half-saturation concentration for phosphorus uptake', default=0.015625_rk)
+   call self%get_parameter(self%alpha_si, 'alpha_si', 'mmol Si/m3',   'half-saturation concentration for silicon uptake', default=0.0_rk)
    call self%get_parameter(self%r0, 'r0',    '1/d', 'maximum growth rate; tlim=1 - at 0 degC and 2*r0 at temp>>sqrt(tll); tlim=2 - at temp>>tll; tlim=3 or 4 - at 20 degC; tlim=5 - at temp_opt',  default=1.3_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%nitrogen_fixation,    'nitrogen_fixation', '', 'whether nitrogen fixation is used to acquire nitrogen', default=.false.)
    call self%get_parameter(self%buoyancy_regulation,    'buoyancy_regulation', '', 'whether cells can regulate vertical movement', default=.false.)
@@ -300,19 +299,19 @@
          nlim = 1.0_rk
       else
          ntemp = (nn + aa)**2
-         nlim = ntemp / (self%alpha_n * self%alpha_n * self%rfn * self%rfn + ntemp) ! MiMe eq. for IN
+         nlim = ntemp / (self%alpha_n * self%alpha_n + ntemp) ! MiMe eq. for IN
       end if
 
       ! Phosphorus limitation (type III functional response)
       ptemp = po**2
-      plim = ptemp / (self%alpha_p * self%alpha_p * self%rfr * self%rfr + ptemp)
+      plim = ptemp / (self%alpha_p * self%alpha_p + ptemp)
       
       ! Silicon limitation
       ! A small fraction (si_minimal) was added to prevent division by zero in case of a Si concentration of zero and rfs=0.
       ! Note: if si is zero, there is now strong si limitation of phytoplankton groups with rfs>0
       
       sitemp = si**2
-      silim = (sitemp + si_minimal) / (self%alpha_si * self%alpha_si * self%rfs * self%rfs + sitemp + si_minimal)
+      silim = (sitemp + si_minimal) / (self%alpha_si * self%alpha_si + sitemp + si_minimal)
       
       ! Calculation actual growth rate
       if (self%mult_llim_nutlim) then
