@@ -451,19 +451,19 @@
              nlim = 1.0_rk
           else
              ntemp = (nn + aa)**2
-             nlim = ntemp / (self%alpha_n * self%alpha_n * self%rfn * self%rfn + ntemp) ! MiMe eq. for IN
+             nlim = ntemp / (self%alpha_n * self%alpha_n + ntemp) ! MiMe eq. for IN
           end if
           
           ! Phosphorus limitation (type III functional response)
           ptemp = po**2
-          plim = ptemp / (self%alpha_p * self%alpha_p * self%rfr * self%rfr + ptemp)
+          plim = ptemp / (self%alpha_p * self%alpha_p + ptemp)
          
           ! Silicon limitation
           ! A small fraction (si_minimal) was added to prevent division by zero in case of a Si concentration of zero and rfs=0.
           ! Note: if si is zero, there is now strong si limitation of phytoplankton groups with rfs>0
          
           sitemp = si**2
-          silim = (sitemp + si_minimal) / (self%alpha_si * self%alpha_si * self%rfs * self%rfs + sitemp + si_minimal)
+          silim = (sitemp + si_minimal) / (self%alpha_si * self%alpha_si + sitemp + si_minimal)
          
           ! Calculation nutrient limitation
           nutlim = min(nlim, plim, silim)
