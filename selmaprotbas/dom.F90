@@ -61,8 +61,8 @@ contains
 	  call self%get_parameter(self%diagnostics, 'diagnostics', '-', 'toggle diagnostic output', default=.false.)
 	  
 	  ! Register state variables
-      call self%register_state_variable(self%id_dom_a, 'dom_a', 'mg/m3', 'DOM - labile', 0.0_rk, minimum=0.0_rk)
-      call self%register_state_variable(self%id_dom_b, 'dom_b', 'mg/m3', 'DOM - semi-labile', 0.0_rk, minimum=0.0_rk)
+      call self%register_state_variable(self%id_dom_a, 'dom_a', 'mg/m3', 'DOM - labile', initial_value=0.0_rk, minimum=0.0_rk)
+      call self%register_state_variable(self%id_dom_b, 'dom_b', 'mg/m3', 'DOM - semi-labile', initial_value=0.0_rk, minimum=0.0_rk)
 	  
 	  ! Register dependencies on external state variables
 	  call self%register_state_dependency(self%id_o2, 'o2', 'mmol O2/m3', 'oxygen')
@@ -76,14 +76,14 @@ contains
 	  
 	  ! register diagnostic variable -> rates included only for debugging purposes
       if(self%diagnostics) then
-		  call self%register_diagnostic_variable(self%id_rate11, 'rate11', 'mgDOM/m3/s', 'dom_a_o2')
-		  call self%register_diagnostic_variable(self%id_rate12, 'rate12', 'mgDOM/m3/s', 'dom_b_o2')
-		  call self%register_diagnostic_variable(self%id_rate21, 'rate21', 'mgDOM/m3/s', 'dom_a_N')
-		  call self%register_diagnostic_variable(self%id_rate22, 'rate22', 'mgDOM/m3/s', 'dom_b_N')
-		  call self%register_diagnostic_variable(self%id_rate3a, 'rate3a', 'mgDOM/m3/s', 'photo_ox_a')
-		  call self%register_diagnostic_variable(self%id_rate3b, 'rate3b', 'mgDOM/m3/s', 'photo_ox_b')
-		  call self%register_diagnostic_variable(self%id_rate4a, 'rate4a', 'mgDOM/m3/s', 'dom_a_floc')
-		  call self%register_diagnostic_variable(self%id_rate4b, 'rate4b', 'mgDOM/m3/s', 'dom_b_floc')
+		  call self%register_diagnostic_variable(self%id_rate11, 'rate11', 'mgDOM/m3/s', 'rate11 - dom_a_o2')
+		  call self%register_diagnostic_variable(self%id_rate12, 'rate12', 'mgDOM/m3/s', 'rate12 - dom_b_o2')
+		  call self%register_diagnostic_variable(self%id_rate21, 'rate21', 'mgDOM/m3/s', 'rate21 - dom_a_N')
+		  call self%register_diagnostic_variable(self%id_rate22, 'rate22', 'mgDOM/m3/s', 'rate22 - dom_b_N')
+		  call self%register_diagnostic_variable(self%id_rate3a, 'rate3a', 'mgDOM/m3/s', 'rate3a - photo_ox_a')
+		  call self%register_diagnostic_variable(self%id_rate3b, 'rate3b', 'mgDOM/m3/s', 'rate3b - photo_ox_b')
+		  call self%register_diagnostic_variable(self%id_rate4a, 'rate4a', 'mgDOM/m3/s', 'rate4a - dom_a_floc')
+		  call self%register_diagnostic_variable(self%id_rate4b, 'rate4b', 'mgDOM/m3/s', 'rate4b - dom_b_floc')
 		  call self%register_diagnostic_variable(self%id_light,  'light', 'W/m2', 'light')
 	  endif
 	  
