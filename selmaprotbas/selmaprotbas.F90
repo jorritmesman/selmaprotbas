@@ -106,7 +106,7 @@
 pure function switch01(x) result(s)
   real(rk), intent(in) :: x
   real(rk) :: s
-  s = merge(0.0_rk, 1.0_rk, x > 0.0_rk)
+  s = merge(1.0_rk, 0.0_rk, x > 0.0_rk)
 end function switch01
 
 pure function gradual_switch(x, c1) result(s)
@@ -170,7 +170,7 @@ end function gradual_switch
    call self%register_state_variable(self%id_si,'si','mmol Si/m3', 'silicon', minimum=0.0_rk,no_river_dilution=.true.)
    if (self%env_type .eq. "fresh") then
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', minimum=0.0_rk,no_river_dilution=.true.)
-      call self%get_parameter(self%mbsrate,  'mbsrate','-', 'mineralization by sulphate rate relative to mineralization by oxygen, default = 0.0 for freshwater, 0.1 for marine', default=0.0_rk)
+      self%mbsrate = 0.0_rk   ! force mineralization by sulphate rate to be 0 regardless of input/default
    else
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', no_river_dilution=.true.)
 	  call self%get_parameter(self%mbsrate,  'mbsrate','-', 'mineralization by sulphate rate relative to mineralization by oxygen, default = 0.0 for freshwater, 0.1 for marine', default=0.1_rk)
