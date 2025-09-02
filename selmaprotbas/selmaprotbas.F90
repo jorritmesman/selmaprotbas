@@ -335,8 +335,7 @@ end function gradual_switch
 ! !LOCAL VARIABLES:
    real(rk)                   :: pwb,pb,fl_c,fl_p,fl_n,fl_si,nnb,aab,ddb_c,ddb_p,ddb_n,ddb_si,oxb,taub,temp,biores
    real(rk)                   :: llds,llsd,bpds,bpsd,recs,recs_all,ldn_O,ldn_N,ldn_S,plib,oxb_pos,anmx
-   real(rk)                   :: fracdenitsed,pret,pbr
-   real(rk)                   :: tau_frac
+   real(rk)                   :: pret,pbr
    real(rk)					  :: oxb_switch,oxb_gswitch,nnb_switch,nnb_gswitch
    real(rk),parameter :: secs_per_day = 86400._rk
 !
@@ -379,18 +378,16 @@ end function gradual_switch
    biores = self%br0 * gradual_switch(oxb_pos,0.03_rk)
 
    ! Resuspension-sedimentation rate are computed as in GOTM-BIO
-  
-   tau_frac = (taub-self%tau_crit)/self%tau_crit
    ! if actual taub is greater than critical tau, then do resuspension
    if (taub .gt. self%tau_crit) then
       llds=0.0_rk
-      llsd=self%erorate*tau_frac
+      llsd=self%erorate*(taub-self%tau_crit)/self%tau_crit
       bpds=0.0_rk
-      bpsd=self%eroratepo4*tau_frac
+      bpsd=self%eroratepo4*(taub-self%tau_crit)/self%tau_crit
    else
-      llds=self%sedrate*tau_frac
+      llds=self%sedrate*(self%tau_crit-taub)/self%tau_crit
       llsd=0.0_rk
-      bpds=self%sedratepo4*tau_frac
+      bpds=self%sedratepo4*(self%tau_crit-taub)/self%tau_crit
       bpsd=0.0_rk
    end if
 
