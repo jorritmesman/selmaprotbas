@@ -16,11 +16,11 @@ module selmaprotbas_dom
 	  type (type_state_variable_id)        :: id_dom_a, id_dom_b ! a is labile, b is semi-labile
 	  type (type_state_variable_id)        :: id_o2, id_nn, id_aa, id_dd_c
 	  type (type_dependency_id)            :: id_temp, id_swf
-	  type (type_diagnostic_variable_id)   :: id_extinc, id_rate11, id_rate12, id_rate21, id_rate22, id_rate3a, id_rate3b, id_rate4a, id_rate4b, id_light !reaction rates
+	  type (type_diagnostic_variable_id)   :: id_extinc, id_rate11, id_rate12, id_rate21, id_rate22, id_rate3a, id_rate3b, id_rate4a, id_rate4b, id_rate5, id_light !reaction rates
 	  
 	  ! Model parameters
 	  real(rk) :: theta, km_o2, km_no3, k_inh_o2
-	  real(rk) :: k_om1, k_om2, oc_dom, qy_dom, f_par, e_par
+	  real(rk) :: k_om1, k_om2, oc_dom, qy_dom, f_par, e_par, k_leach, q_leach
 	  real(rk) :: k_floc, mole_per_weight, n_use_factor, ext_coef_a, ext_coef_b
 	  logical  :: diagnostics
    contains
@@ -55,6 +55,8 @@ contains
 	  call self%get_parameter(self%k_floc, 'k_floc', 'd-1', 'flocculation rate', default=0.0006_rk, scale_factor=d_per_s)
 	  call self%get_parameter(self%mole_per_weight, 'mole_per_weight', 'molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
 	  call self%get_parameter(self%n_use_factor, 'n_use_factor', 'mmol N / mg DOM', 'Factor of bacterial mineralisation as N flux', default=0.8_rk)
+	  call self%get_parameter(self%k_leach, 'k_leach', 'd-1', 'Leaching constant', default=0.001_rk, scale_factor=d_per_s)
+	  call self%get_parameter(self%q_leach, 'q_leach', 'K-1', 'Temperature correction constant leaching', default=0.02_rk)
 	  call self%get_parameter(self%ext_coef_a, 'ext_coef_a', 'm2 mgDOM-1 ', 'Linear coefficient DOM light influence', default=0.1_rk)
 	  call self%get_parameter(self%ext_coef_b, 'ext_coef_b', '-', 'Exponential coefficient DOM light influence', default=1.22_rk)
 	  call self%get_parameter(self%diagnostics, 'diagnostics', '-', 'toggle diagnostic output', default=.false.)
@@ -83,6 +85,7 @@ contains
 		  call self%register_diagnostic_variable(self%id_rate3b, 'rate3b', 'mgDOM/m3/s', 'rate3b - photo_ox_b')
 		  call self%register_diagnostic_variable(self%id_rate4a, 'rate4a', 'mgDOM/m3/s', 'rate4a - dom_a_floc')
 		  call self%register_diagnostic_variable(self%id_rate4b, 'rate4b', 'mgDOM/m3/s', 'rate4b - dom_b_floc')
+		  call self%register_diagnostic_variable(self%id_rate5, 'rate5', 'mgDOM/m3/s', 'rate5 - leaching')
 		  call self%register_diagnostic_variable(self%id_light,  'light', 'W/m2', 'light')
 	  endif
 	  
@@ -100,8 +103,8 @@ contains
 !
 ! !LOCAL VARIABLES:
    real(rk)                   :: dom_a, dom_b 
-   real(rk)                   :: temp, o2, nn, swfz
-   real(rk)                   :: temp_adj, rate_o2, rate_no3, R11, R12, R21, R22, R3a, R3b, R4a, R4b
+   real(rk)                   :: temp, o2, nn, dd_c, swfz
+   real(rk)                   :: temp_adj, rate_o2, rate_no3, R11, R12, R21, R22, R3a, R3b, R4a, R4b, r_leach
 !EOP
 !-----------------------------------------------------------------------
 !BOC
@@ -119,6 +122,7 @@ contains
    !retrieve domcast variables
    _GET_(self%id_o2, o2)
    _GET_(self%id_nn, nn)
+   _GET_(self%id_dd_c, dd_c)
    
    temp_adj = self%theta ** (temp - 20.0_rk) ! temperature adjustment factor
    
@@ -142,11 +146,15 @@ contains
    R4a = self%k_floc * dom_a
    R4b = self%k_floc * dom_b ! DOMCAST had a "* swfz", but then the units would be wrong
    
+   ! Source: leaching from detritus (POM). Only affects dom_a
+   ! Similar to WET. Defaults of k_leach and q_leach are based on the WET defaults
+   r_leach = dd_c * self%k_leach * exp(self%q_leach * (temp - 20.0_rk))
+   
    ! Set light extinction
    _SET_DIAGNOSTIC_(self%id_extinc, self%ext_coef_a*dom_b**self%ext_coef_b)
    
    ! All processes degrade DOM pools
-   _SET_ODE_(self%id_dom_a, -(R11 + R21 + R3a + R4a))
+   _SET_ODE_(self%id_dom_a, -(R11 + R21 + R3a + R4a) + r_leach / self%mole_per_weight)
    _SET_ODE_(self%id_dom_b, -(R12 + R22 + R3b + R4b))
    
    ! O2 is consumed for DOM bacteria mineralization of both DOM pools
@@ -160,7 +168,7 @@ contains
    
    ! Carbon detritus is produced during flocculation
    ! Uses mole_per_weight ratio to convert from mg/m3 DOM to mmolC/m3 detritus
-   _SET_ODE_(self%id_dd_c, (R4a + R4b) * self%mole_per_weight)
+   _SET_ODE_(self%id_dd_c, (R4a + R4b) * self%mole_per_weight - r_leach)
    
    ! Export diagnostic variables -> rates included only for debugging purposes
    if(self%diagnostics) then
@@ -172,6 +180,7 @@ contains
 	   _SET_DIAGNOSTIC_(self%id_rate3b, R3b)
 	   _SET_DIAGNOSTIC_(self%id_rate4a, R4a)
 	   _SET_DIAGNOSTIC_(self%id_rate4b, R4b)
+	   _SET_DIAGNOSTIC_(self%id_rate5, r_leach / self%mole_per_weight)
 	   _SET_DIAGNOSTIC_(self%id_light, swfz)
    endif
    
