@@ -93,6 +93,9 @@ contains
 	  call self%register_dependency(self%id_temp, standard_variables%temperature)
 	  call self%register_dependency(self%id_swf,  standard_variables%downwelling_shortwave_flux)
 	  
+	  call self%add_to_aggregate_variable(standard_variables%total_carbon, self%id_dom_a, scale_factor = self%mole_per_weight)
+	  call self%add_to_aggregate_variable(standard_variables%total_carbon, self%id_dom_b, scale_factor = self%mole_per_weight)
+	  
    end subroutine initialize
 
    subroutine do(self,_ARGUMENTS_DO_)
