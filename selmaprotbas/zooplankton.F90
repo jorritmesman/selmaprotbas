@@ -53,7 +53,7 @@
       ! Variable identifiers
       type (type_state_variable_id)             :: id_c
       type (type_state_variable_id),allocatable :: id_prey(:)
-      type (type_state_variable_id)             :: id_aa, id_po, id_dd_c, id_dd_p, id_dd_n, id_dd_si, id_dic, id_o2, id_si
+      type (type_state_variable_id)             :: id_aa, id_po, id_dd_c, id_dd_p, id_dd_n, id_dd_si, id_dic, id_o2, id_si,id_dom_a
       type (type_dependency_id)                 :: id_temp
 
       ! Model parameters
@@ -65,6 +65,8 @@
       real(rk) :: nue,sigma_b
       real(rk) :: iv,graz,toptz,zcl1
       real(rk) :: rfr,rfn, rfs
+	  logical  :: couple_dom
+	  real(rk) :: f_diss, mole_c_per_weight_dom
    contains
       procedure :: initialize
       procedure :: do
@@ -120,6 +122,7 @@
    call self%get_parameter(self%graz,    'graz',    '1/d',            'grazing rate',                    default=0.5_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%toptz,   'toptz',   'deg C',          'optimal temperature for grazing', default=20._rk)
    call self%get_parameter(self%zcl1,    'zcl1',    '-',              'closure parameter',               default=50._rk)
+   call self%get_parameter(self%couple_dom, 'couple_dom', '-',        'couple zooplankton to dom module',default=.false.)
 
    ! Register state variables
    call self%register_state_dependency(self%id_aa, 'aa', 'mmol N/m3', 'ammonium')
@@ -130,6 +133,16 @@
    call self%register_state_dependency(self%id_dd_n, 'dd_n', 'mmol N/m3', 'nitrogen detritus')
    call self%register_state_dependency(self%id_dd_si, 'dd_si', 'mmol Si/m3', 'silicon detritus')
    call self%register_state_dependency(self%id_o2, 'o2', 'mmol O2/m3','oxygen')
+   
+   ! DOM snippet
+   call self%get_parameter(self%f_diss,'f_diss','-', 'fraction of zooplankton biomass that is dissolved, only used if DOM is coupled', default=0.0_rk, minimum=0.0_rk, maximum=1.0_rk)
+   if (self%couple_dom) then
+	  call self%register_state_dependency(self%id_dom_a, 'dom_a', 'mg/m3', 'DOM - labile')
+	  call self%get_parameter(self%mole_c_per_weight_dom,'mole_c_per_weight_dom','molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
+   else
+      self%f_diss = 0.0_rk   ! if no DOM is provided, all biomass should go to detritus
+   end if
+   ! End DOM snippet
 
    ! Contribute to total nitrogen, phosphorus, carbon
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_c, self%rfn)
@@ -281,11 +294,15 @@
          _SET_ODE_(self%id_prey(iprey), - graz_z * self%pref(iprey) * prey)
       end do
       _SET_ODE_(self%id_c, graz_z * food - (lzn + lzd) * zz0)
-      _SET_ODE_(self%id_dd_c, + lzd * zz0)
+      _SET_ODE_(self%id_dd_c, + lzd * zz0 * (1.0_rk - self%f_diss))
       _SET_ODE_(self%id_dd_p, + lzd * zz0 * self%rfr)
       _SET_ODE_(self%id_dd_n, + lzd * zz0 * self%rfn)
       _SET_ODE_(self%id_dd_si, + lzd * zz0 * self%rfs)
-
+	  
+	  if (self%couple_dom) then
+	     _SET_ODE_(self%id_dom_a, lzd * zz0 * self%f_diss / self%mole_c_per_weight_dom)
+	  end if
+	  
       if (_AVAILABLE_(self%id_dic)) _SET_ODE_(self%id_dic, lzn * zz0)
 
    ! Leave spatial loops (if any)

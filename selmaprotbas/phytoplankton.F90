@@ -64,7 +64,7 @@
       logical  :: nitrogen_fixation, use_24h_light, mult_llim_nutlim, couple_dom
       logical  :: buoyancy_regulation, buoy_temperature, buoy_nutrient
       real(rk) :: par_limit1, par_limit2, par_limit3, vert_vel1, vert_vel2, vert_vel3, vert_vel4
-	    real(rk) :: buoy_temp_limit, vert_vel_temp
+	  real(rk) :: buoy_temp_limit, vert_vel_temp
       real(rk) :: buoy_nutrient_limit, vert_vel_nutrient
       real(rk) :: rfr, rfn, rfs
       real(rk) :: r0
@@ -191,12 +191,12 @@
    call self%register_state_dependency(self%id_dic,standard_variables%mole_concentration_of_dissolved_inorganic_carbon, required=.false.)
    
    ! DOM snippet
-   call self%get_parameter(self%f_diss,'f_diss','-', 'fraction of phytoplankton biomass that is dissolved, only used if DOM is provided', default=0.0_rk, minimum=0.0_rk, maximum=1.0_rk)
+   call self%get_parameter(self%f_diss,'f_diss','-', 'fraction of phytoplankton biomass that is dissolved, only used if DOM is coupled', default=0.0_rk, minimum=0.0_rk, maximum=1.0_rk)
    if (self%couple_dom) then
 	  call self%register_state_dependency(self%id_dom_a, 'dom_a', 'mg/m3', 'DOM - labile')
 	  call self%get_parameter(self%mole_c_per_weight_dom,'mole_c_per_weight_dom','molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
    else
-      self%f_diss = 0.0_rk   ! force dissolved fraction to 0 regardless of DOM availability
+      self%f_diss = 0.0_rk   ! if no DOM is provided, all biomass should go to detritus
    end if
    ! End DOM snippet
 
