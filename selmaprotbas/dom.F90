@@ -19,7 +19,7 @@ module selmaprotbas_dom
 	  type (type_diagnostic_variable_id)   :: id_extinc, id_rate11, id_rate12, id_rate21, id_rate22, id_rate3a, id_rate3b, id_rate4a, id_rate4b, id_light !reaction rates
 	  
 	  ! Model parameters
-	  real(rk) :: frac, theta, km_o2, km_no3, k_inh_o2
+	  real(rk) :: theta, km_o2, km_no3, k_inh_o2
 	  real(rk) :: k_om1, k_om2, oc_dom, qy_dom, f_par, e_par
 	  real(rk) :: k_floc, mole_per_weight, n_use_factor, ext_coef_a, ext_coef_b
 	  logical  :: diagnostics
@@ -47,7 +47,6 @@ contains
       call self%get_parameter(self%k_inh_o2, 'k_inh_o2', 'mmol m-3', 'inhibitation of denitrification by O2', default=0.33_rk)
 	  call self%get_parameter(self%k_om1, 'k_om1', 'yr-1', 'labile OM degradation rate', default=1.0_rk, scale_factor=y_per_s)
       call self%get_parameter(self%k_om2, 'k_om2', 'yr-1', 'semi-labile OM2 degradation rate', default=0.1_rk, scale_factor=y_per_s)
-	  call self%get_parameter(self%frac, 'frac', '-', 'Fraction of dom_b that is refractory', default=0.0_rk)
 	  call self%get_parameter(self%theta, 'theta',  '-', 'Temperature adjustment coefficient', default=1.047_rk)
 	  call self%get_parameter(self%oc_dom, 'oc_dom', 'm2/mgDOM', 'Optical cross section of DOM', default=0.01_rk)
 	  call self%get_parameter(self%qy_dom, 'qy_dom', 'mgDOM / mol PAR', 'Quantum yield', default=0.1_rk)
@@ -120,9 +119,6 @@ contains
    !retrieve domcast variables
    _GET_(self%id_o2, o2)
    _GET_(self%id_nn, nn)
-   
-   dom_a = self%frac * dom_b
-   dom_b = (1 - self%frac) * dom_b
    
    temp_adj = self%theta ** (temp - 20.0_rk) ! temperature adjustment factor
    
