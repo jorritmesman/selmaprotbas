@@ -55,7 +55,7 @@ contains
 	  call self%get_parameter(self%k_floc, 'k_floc', 'd-1', 'flocculation rate', default=0.0006_rk, scale_factor=d_per_s)
 	  call self%get_parameter(self%mole_per_weight, 'mole_per_weight', 'molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
 	  call self%get_parameter(self%n_use_factor, 'n_use_factor', 'mmol N / mg DOM', 'Factor of bacterial mineralisation as N flux', default=0.8_rk)
-	  call self%get_parameter(self%k_leach, 'k_leach', 'd-1', 'Leaching constant', default=0.001_rk, scale_factor=d_per_s)
+	  call self%get_parameter(self%k_leach, 'k_leach', 'd-1', 'Leaching constant, at 20 degrees', default=0.001_rk, scale_factor=d_per_s)
 	  call self%get_parameter(self%q_leach, 'q_leach', 'K-1', 'Temperature correction constant leaching', default=0.02_rk)
 	  call self%get_parameter(self%ext_coef_a, 'ext_coef_a', 'm2 mgDOM-1 ', 'Linear coefficient DOM light influence', default=0.1_rk)
 	  call self%get_parameter(self%ext_coef_b, 'ext_coef_b', '-', 'Exponential coefficient DOM light influence', default=1.22_rk)

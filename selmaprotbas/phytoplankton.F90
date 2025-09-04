@@ -50,7 +50,7 @@
 ! !PUBLIC_DERIVED_TYPES:
   type,extends(type_base_model),public :: type_selmaprotbas_phytoplankton
       type (type_state_variable_id) :: id_c
-      type (type_state_variable_id) :: id_aa,id_nn,id_po,id_o2,id_dd_c,id_dd_p,id_dd_n,id_dd_si,id_dic,id_si
+      type (type_state_variable_id) :: id_aa,id_nn,id_po,id_o2,id_dd_c,id_dd_p,id_dd_n,id_dd_si,id_dic,id_si,id_dom_a
       type (type_bottom_state_variable_id) :: id_fl_c,id_fl_p,id_fl_n,id_fl_si
       type (type_dependency_id) :: id_par, id_parmean
       type (type_dependency_id) :: id_temp
@@ -61,7 +61,7 @@
 
       real(rk) :: alpha_light, imin
       real(rk) :: alpha_n, alpha_p, alpha_si
-      logical  :: nitrogen_fixation, use_24h_light, mult_llim_nutlim
+      logical  :: nitrogen_fixation, use_24h_light, mult_llim_nutlim, couple_dom
       logical  :: buoyancy_regulation, buoy_temperature, buoy_nutrient
       real(rk) :: par_limit1, par_limit2, par_limit3, vert_vel1, vert_vel2, vert_vel3, vert_vel4
 	    real(rk) :: buoy_temp_limit, vert_vel_temp
@@ -71,7 +71,7 @@
       real(rk) :: tll, beta, temp_opt, temp_sigma, temp_min
       integer :: tlim, llim
       real(rk) :: nb
-      real(rk) :: deltao
+      real(rk) :: deltao, f_diss, mole_c_per_weight_dom
       real(rk) :: Yc
       real(rk) :: sedrate
       real(rk) :: tau_crit
@@ -162,6 +162,7 @@
    !call self%get_parameter(self%sul,'sul','PSU', 'upper salinity limit', default=10.0_rk)
    call self%get_parameter(self%sedrate, 'sedrate', 'm/d', 'sedimentation rate', default=0.0_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%use_24h_light, 'use_24h_light', '-', 'use 24h averaged light for growth', default=.false.)
+   call self%get_parameter(self%couple_dom, 'couple_dom', '-', 'couple phytoplankton to dom module', default=.false.)
 
    call self%register_state_variable(self%id_c, 'c', 'mmol C/m3', 'concentration', minimum=0.0_rk, background_value=c0, vertical_movement=wz)
    call self%register_state_dependency(self%id_aa, 'aa', 'mmol N/m3', 'ammonium')
@@ -188,6 +189,16 @@
       call self%register_dependency(self%id_taub, standard_variables%bottom_stress)
    end if
    call self%register_state_dependency(self%id_dic,standard_variables%mole_concentration_of_dissolved_inorganic_carbon, required=.false.)
+   
+   ! DOM snippet
+   call self%get_parameter(self%f_diss,'f_diss','-', 'fraction of phytoplankton biomass that is dissolved, only used if DOM is provided', default=0.0_rk, minimum=0.0_rk, maximum=1.0_rk)
+   if (self%couple_dom) then
+	  call self%register_state_dependency(self%id_dom_a, 'dom_a', 'mg/m3', 'DOM - labile')
+	  call self%get_parameter(self%mole_c_per_weight_dom,'mole_c_per_weight_dom','molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
+   else
+      self%f_diss = 0.0_rk   ! force dissolved fraction to 0 regardless of DOM availability
+   end if
+   ! End DOM snippet
 
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_c, self%rfn)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_c, self%rfr)
@@ -345,10 +356,14 @@
       _SET_ODE_(self%id_po, self%rfr * (- r * cg + lpn * c))
       _SET_ODE_(self%id_si, self%rfs * (- r * cg + lpn * c))
       _SET_ODE_(self%id_c, r * cg - (lpn + lpd) * c)
-      _SET_ODE_(self%id_dd_c, lpd * c)
+      _SET_ODE_(self%id_dd_c, lpd * c * (1.0_rk - self%f_diss))
       _SET_ODE_(self%id_dd_p, lpd * c * self%rfr)
       _SET_ODE_(self%id_dd_n, lpd * c * self%rfn)
       _SET_ODE_(self%id_dd_si, lpd * c * self%rfs)
+	  
+	  if (self%couple_dom) then
+	     _SET_ODE_(self%id_dom_a, lpd * c * self%f_diss / self%mole_c_per_weight_dom)
+	  end if
 
       if (_AVAILABLE_(self%id_dic)) _SET_ODE_(self%id_dic, lpn * c - r * cg)
 
