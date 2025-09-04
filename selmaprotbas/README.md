@@ -10,7 +10,7 @@ Starts a branch of SELMA-model at GIT version:
 	Follows: v5.3
 The model has changed from being based on nitrogen to now base all calculations on carbon, has fixed issues
 with calculations of chlorophyll, maintains the nutrient balance in case of different ratios between groups
-in the model, and other changes as described in the supplementary material of Mesman et al. (submitted), 
+in the model, and other changes as described in the supplementary material of Mesman et al. (2022), 
 "Future  effects of storms on nutrient distribution and phytoplankton dynamics".
 
 * SELMA (see below)

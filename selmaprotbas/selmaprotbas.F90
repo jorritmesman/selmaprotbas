@@ -59,6 +59,8 @@
 !  - An extra phytoplankton light limitation function (similar to the llim=1 option, but more gradual)
 !  - Option to multiply phytoplankton lightlim and nutlim (rather than uses the minimum value of them)
 !  - Compatible with FABM v1.0.4
+!  2025, by Shajar Regev (IOLR):
+!  - Option to use anammox and sulphate-based mineralisation
 !
 ! !MODULE: selmaprotbas
 !
@@ -142,8 +144,8 @@ end function gradual_switch
    call self%get_parameter(self%alphaade,'alphaade', 'mmol N/m3', 'half-saturation constant for chemolithoautotrophic denitrification', default=1.0_rk)
    call self%get_parameter(self%mbnnrate, 'mbnnrate', '-', 'mineralization by nitrate rate relative to mineralization by oxygen', default=0.1_rk)
    call self%get_parameter(self%mbsrate, 'mbsrate', '-', 'mineralization by sulphate rate relative to mineralization by oxygen, not used for env_type = fresh', default=0.1_rk)
-   call self%get_parameter(self%den_frac_denanmx, 'den_frac_denanmx', '-', 'relative contribution of denitrification out of total denitrification + anammox', default=1.0_rk)
-   call self%get_parameter(self%den_frac_denanmx_sed, 'den_frac_denanmx_sed', '-', 'relative contribution of denitrification out of total denitrification + anammox in sediment', default=1.0_rk)
+   call self%get_parameter(self%den_frac_denanmx, 'den_frac_denanmx', '-', 'relative contribution of denitrification out of total denitrification + anammox', default=1.0_rk, minimum=0.0_rk, maximum=1.0_rk)
+   call self%get_parameter(self%den_frac_denanmx_sed, 'den_frac_denanmx_sed', '-', 'relative contribution of denitrification out of total denitrification + anammox in sediment', default=1.0_rk, minimum=0.0_rk, maximum=1.0_rk)
    call self%get_parameter(self%q10_recs,'q10_recs','1/K', 'temperature dependence of sediment remineralization', default=0.175_rk)
    call self%get_parameter(self%tau_crit,'tau_crit','N/m2', 'critical shear stress', default=0.07_rk)
    call self%get_parameter(self%sedrate, 'sedrate', 'm/d', 'detritus sedimentation rate', default=2.25_rk, scale_factor=1.0_rk/secs_per_day)

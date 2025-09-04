@@ -191,7 +191,7 @@
    call self%register_state_dependency(self%id_dic,standard_variables%mole_concentration_of_dissolved_inorganic_carbon, required=.false.)
    
    ! DOM snippet
-   call self%get_parameter(self%f_diss,'f_diss','-', 'fraction of phytoplankton biomass that is dissolved, only used if DOM is coupled', default=0.0_rk, minimum=0.0_rk, maximum=1.0_rk)
+   call self%get_parameter(self%f_diss,'f_diss','-', 'fraction of phytoplankton biomass that is dissolved, only used if couple_dom=true', default=0.2_rk, minimum=0.0_rk, maximum=1.0_rk)
    if (self%couple_dom) then
 	  call self%register_state_dependency(self%id_dom_a, 'dom_a', 'mg/m3', 'DOM - labile')
 	  call self%get_parameter(self%mole_c_per_weight_dom,'mole_c_per_weight_dom','molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
