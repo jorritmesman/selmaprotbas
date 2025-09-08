@@ -203,7 +203,7 @@
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_c, self%rfn)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_c, self%rfr)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_c)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m^3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
+   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
    call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_c, scale_factor=kc, include_background=.true.)
 
    call self%register_diagnostic_variable(self%id_chla, 'chla','mg chl a/m3', 'chlorophyll concentration')
@@ -211,7 +211,7 @@
    call self%register_diagnostic_variable(self%id_NPP,  'NPP', 'mmol/m3/d',   'net primary production')
 
 !  we create an aggregate variable for chlA
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_chlorophyll',units="mg/m^3",aggregate_variable=.true.),self%id_chla,scale_factor=1._rk)
+   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_chlorophyll',units="mg/m3",aggregate_variable=.true.),self%id_chla,scale_factor=1._rk)
    
    end subroutine initialize
 !EOC

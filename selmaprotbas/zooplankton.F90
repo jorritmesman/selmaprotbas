@@ -148,7 +148,7 @@
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_c, self%rfn)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_c, self%rfr)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_c)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m^3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
+   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
    
 
    ! Register link to external DIC pool

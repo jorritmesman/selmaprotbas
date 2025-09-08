@@ -196,22 +196,21 @@ end function gradual_switch
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_fl_n)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_fl_p)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_fl_c)
-	call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pb)
-	call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pw)
+   call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pb)
+   call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pw)
    call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_dd_c, kc)
    
-   
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m^3",aggregate_variable=.true.),self%id_dd_si)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m^3",aggregate_variable=.true.),self%id_si)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m^3",aggregate_variable=.true.),self%id_fl_si)
+   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_dd_si)
+   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_si)
+   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_fl_si)
    
    ! Register diagnostic variables
-   call self%register_diagnostic_variable(self%id_NO3_mg,  'Nit',      'mg NO3N/m**3','nitrate conc in mass unit')
-   call self%register_diagnostic_variable(self%id_NH4_mg,  'Amm',      'mg NH4N/m**3','ammonium  conc in nitrogen mass unit')
-   call self%register_diagnostic_variable(self%id_PO4_mg,  'Pho',      'mg PO4P/m**3','phosphate conc in phosphorus mass unit')
-   call self%register_diagnostic_variable(self%id_Si_mg,   'Si_mg',   'mg Si/m**3',  'silicon conc in silicon mass unit')
-   call self%register_diagnostic_variable(self%id_O2_mg,   'DO_mg',    'mg O2/m**3',  'oxygen in O2 mass unit')
-   call self%register_diagnostic_variable(self%id_H2S_mg,  'H2S_mg',  'mg H2S/m**3',  'H2S in H2S mass unit')
+   call self%register_diagnostic_variable(self%id_NO3_mg,  'Nit',     'mg NO3N/m3','nitrate conc in mass unit')
+   call self%register_diagnostic_variable(self%id_NH4_mg,  'Amm',     'mg NH4N/m3','ammonium  conc in nitrogen mass unit')
+   call self%register_diagnostic_variable(self%id_PO4_mg,  'Pho',     'mg PO4P/m3','phosphate conc in phosphorus mass unit')
+   call self%register_diagnostic_variable(self%id_Si_mg,   'Si_mg',   'mg Si/m3',  'silicon conc in silicon mass unit')
+   call self%register_diagnostic_variable(self%id_O2_mg,   'DO_mg',   'mg O2/m3',  'oxygen in O2 mass unit')
+   call self%register_diagnostic_variable(self%id_H2S_mg,  'H2S_mg',  'mg H2S/m3',  'H2S in H2S mass unit')
    call self%register_diagnostic_variable(self%id_DNP,     'DNP',     'mg N/m3/d', 'denitrification pelagic')
    call self%register_diagnostic_variable(self%id_DNB,     'DNB',     'mg N/m2/d', 'denitrification benthic', source=source_do_bottom)
    call self%register_diagnostic_variable(self%id_ANMP,    'ANMP',    'mg N/m2/d', 'anammox pelagic')
@@ -220,8 +219,6 @@ end function gradual_switch
    call self%register_diagnostic_variable(self%id_SBR,     'SBR',     'mg C/m2/d', 'sediment carbon burial', source=source_do_bottom)
    call self%register_diagnostic_variable(self%id_PBR,     'PBR',     'mg P/m2/d', 'phosphorus burial', source=source_do_bottom)
    call self%register_diagnostic_variable(self%id_OFL,     'OFL',     'mg O2/m2/d','oxygen surface flux (positive when into water)', source=source_do_surface)
-   
-      
    
    ! Register environmental dependencies
    call self%register_dependency(self%id_temp, standard_variables%temperature)

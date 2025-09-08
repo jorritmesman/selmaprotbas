@@ -43,21 +43,21 @@ contains
 	  
 	  ! Register model parameters
 	  call self%get_parameter(self%km_o2, 'km_o2', 'mmol/m3', 'respiration', default=1.23e-2_rk)
-	  call self%get_parameter(self%km_no3, 'km_no3', 'mmol m-3', 'denitrification', default=0.01_rk)
-      call self%get_parameter(self%k_inh_o2, 'k_inh_o2', 'mmol m-3', 'inhibitation of denitrification by O2', default=0.33_rk)
-	  call self%get_parameter(self%k_om1, 'k_om1', 'yr-1', 'labile OM degradation rate', default=1.0_rk, scale_factor=y_per_s)
-      call self%get_parameter(self%k_om2, 'k_om2', 'yr-1', 'semi-labile OM2 degradation rate', default=0.1_rk, scale_factor=y_per_s)
+	  call self%get_parameter(self%km_no3, 'km_no3', 'mmol/m3', 'denitrification', default=0.01_rk)
+      call self%get_parameter(self%k_inh_o2, 'k_inh_o2', 'mmol/m3', 'inhibitation of denitrification by O2', default=0.33_rk)
+	  call self%get_parameter(self%k_om1, 'k_om1', '1/yr', 'labile OM degradation rate', default=1.0_rk, scale_factor=y_per_s)
+      call self%get_parameter(self%k_om2, 'k_om2', '1/yr', 'semi-labile OM2 degradation rate', default=0.1_rk, scale_factor=y_per_s)
 	  call self%get_parameter(self%theta, 'theta',  '-', 'Temperature adjustment coefficient', default=1.047_rk)
 	  call self%get_parameter(self%oc_dom, 'oc_dom', 'm2/mgDOM', 'Optical cross section of DOM', default=0.01_rk)
 	  call self%get_parameter(self%qy_dom, 'qy_dom', 'mgDOM / mol PAR', 'Quantum yield', default=0.1_rk)
 	  call self%get_parameter(self%f_par, 'f_par', '-', 'PAR fraction', default=0.45_rk)
-      call self%get_parameter(self%e_par, 'e_par', 'J mol-1', 'Energy of PAR photons', default=240800._rk)
-	  call self%get_parameter(self%k_floc, 'k_floc', 'd-1', 'flocculation rate', default=0.0006_rk, scale_factor=d_per_s)
+      call self%get_parameter(self%e_par, 'e_par', 'J/mol', 'Energy of PAR photons', default=240800._rk)
+	  call self%get_parameter(self%k_floc, 'k_floc', '1/d', 'flocculation rate', default=0.0006_rk, scale_factor=d_per_s)
 	  call self%get_parameter(self%mole_per_weight, 'mole_per_weight', 'molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
 	  call self%get_parameter(self%n_use_factor, 'n_use_factor', 'mmol N / mg DOM', 'Factor of bacterial mineralisation as N flux', default=0.8_rk)
-	  call self%get_parameter(self%k_leach, 'k_leach', 'd-1', 'Leaching constant, at 20 degrees', default=0.001_rk, scale_factor=d_per_s)
-	  call self%get_parameter(self%q_leach, 'q_leach', 'K-1', 'temperature dependence of leaching', default=0.02_rk)
-	  call self%get_parameter(self%ext_coef_a, 'ext_coef_a', 'm2 mgDOM-1 ', 'Linear coefficient DOM light influence', default=0.1_rk)
+	  call self%get_parameter(self%k_leach, 'k_leach', '1/d', 'Leaching constant, at 20 degrees', default=0.001_rk, scale_factor=d_per_s)
+	  call self%get_parameter(self%q_leach, 'q_leach', '1/K', 'temperature dependence of leaching', default=0.02_rk)
+	  call self%get_parameter(self%ext_coef_a, 'ext_coef_a', 'm2/mgDOM', 'Linear coefficient DOM light influence', default=0.1_rk)
 	  call self%get_parameter(self%ext_coef_b, 'ext_coef_b', '-', 'Exponential coefficient DOM light influence', default=1.22_rk)
 	  call self%get_parameter(self%diagnostics, 'diagnostics', '-', 'toggle diagnostic output', default=.false.)
 	  
@@ -72,7 +72,7 @@ contains
 	  call self%register_state_dependency(self%id_dd_c,'dd_c','mmol C/m3', 'carbon detritus')
 	  
 	  ! Register light extinction diagnostic and light aggregation
-	  call self%register_diagnostic_variable(self%id_extinc, 'extinc', 'm-1', 'shading by CDOM')
+	  call self%register_diagnostic_variable(self%id_extinc, 'extinc', '1/m', 'shading by CDOM')
 	  call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_shortwave_flux, self%id_extinc)
 	  
 	  ! register diagnostic variable -> rates included only for debugging purposes
@@ -85,8 +85,8 @@ contains
 		  call self%register_diagnostic_variable(self%id_rate3b, 'rate3b', 'mgDOM/m3/s', 'rate3b - photo_ox_b')
 		  call self%register_diagnostic_variable(self%id_rate4a, 'rate4a', 'mgDOM/m3/s', 'rate4a - dom_a_floc')
 		  call self%register_diagnostic_variable(self%id_rate4b, 'rate4b', 'mgDOM/m3/s', 'rate4b - dom_b_floc')
-		  call self%register_diagnostic_variable(self%id_rate5, 'rate5', 'mgDOM/m3/s', 'rate5 - leaching')
-		  call self%register_diagnostic_variable(self%id_light,  'light', 'W/m2', 'light')
+		  call self%register_diagnostic_variable(self%id_rate5,  'rate5',  'mgDOM/m3/s', 'rate5 - leaching')
+		  call self%register_diagnostic_variable(self%id_light,  'light',  'W/m2', 'light')
 	  endif
 	  
 	  ! Register environmental dependencies
