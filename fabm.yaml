@@ -14,6 +14,7 @@ instances:
       mbnnrate: 0.1                      # mineralization by nitrate rate relative to mineralization by oxygen (-), default = 0.1
       den_frac_denanmx: 1.0              # relative contribution of denitrification out of total denitrification + anammox (-), default = 1.0
       den_frac_denanmx_sed: 1.0          # relative contribution of denitrification out of total denitrification + anammox in sediment (-), default = 1.0
+      nitrif_rate: 0.1                   # nitrification rate (1/d), default = 0.1
       q10_recs: 0.175                    # temperature dependence of sediment remineralization (1/K), default = 0.175
       tau_crit: 0.07                     # critical shear stress (N/m2), default = 0.07
       sedrate: 2.25                      # detritus sedimentation rate (m/d), default = 2.25
@@ -203,19 +204,19 @@ instances:
       km_o2: 0.0123                      # respiration (mmol/m3), default = 0.0123
       km_no3: 0.01                       # denitrification (mmol/m3), default = 0.01
       k_inh_o2: 0.33                     # inhibitation of denitrification by O2 (mmol/m3), default = 0.33
-      k_om1: 1.0                         # labile OM degradation rate (yr-1), default = 1.0
-      k_om2: 0.1                         # semi-labile OM2 degradation rate (yr-1), default = 0.1
+      k_om1: 1.0                         # labile OM degradation rate (1/yr), default = 1.0
+      k_om2: 0.1                         # semi-labile OM2 degradation rate (1/yr), default = 0.1
       theta: 1.047                       # Temperature adjustment coefficient (-), default = 1.047
       oc_dom: 0.01                       # Optical cross section of DOM (m2/mgDOM), default = 0.01
       qy_dom: 0.1                        # Quantum yield (mgDOM / mol PAR), default = 0.1
       f_par: 0.45                        # PAR fraction (-), default = 0.45
-      e_par: 240800                      # Energy of PAR photons (J mol-1), 240800
-      k_floc: 0.0006                     # flocculation rate (d-1), default = 0.0006
+      e_par: 240800                      # Energy of PAR photons (J/mol), 240800
+      k_floc: 0.0006                     # flocculation rate (1/d), default = 0.0006
       mole_per_weight: 0.0416            # mole_per_weight (molC/gDOM), default = 0.0416
       n_use_factor: 0.8                  # Factor of bacterial mineralisation as N flux (mmol N / mg DOM), default = 0.8
-      k_leach: 0.001                     # Leaching constant, at 20 degrees (d-1), default = 0.001
+      k_leach: 0.001                     # Leaching constant, at 20 degrees (1/d), default = 0.001
       q_leach: 0.02                      # temperature dependence of leaching (1/K), default = 0.02
-      ext_coef_a: 0.1                    # Linear coefficient DOM light influence (m2 mgDOM-1), default = 0.1
+      ext_coef_a: 0.1                    # Linear coefficient DOM light influence (m2/mgDOM), default = 0.1
       ext_coef_b: 1.22                   # Exponential coefficient DOM light influence (-), default = 1.22
       diagnostics: false                 # toggle diagnostic output, default = false
     coupling:
