@@ -84,7 +84,7 @@
       type (type_dependency_id)            :: id_temp,id_salt
       type (type_horizontal_dependency_id) :: id_taub,id_wind
       type (type_diagnostic_variable_id)   :: id_DNP,id_ANMP,id_NO3_mg,id_NH4_mg,id_PO4_mg,id_O2_mg,id_H2S_mg,id_Si_mg
-      type (type_horizontal_diagnostic_variable_id) :: id_DNB,id_ANMB,id_SBR,id_PBR,id_OFL
+      type (type_horizontal_diagnostic_variable_id) :: id_DNB,id_ANMB,id_SBR,id_PBR,id_OFL,id_NBR
 
       ! Model parameters
       real(rk) :: nb,deltao,nue,sigma_b,dn,dn_sed
@@ -250,7 +250,6 @@ end function gradual_switch
     real(rk),parameter :: p_molar_mass = 30.973761_rk ! molar mass of phosphorus
     real(rk),parameter :: n_molar_mass =  14.0067_rk ! molar mass of nitrogen
     real(rk),parameter :: o2_molar_mass =  31.9988_rk ! molar mass of O2
-    real(rk),parameter :: c_molar_mass =  12.011_rk ! molar mass of carbon
     real(rk),parameter :: h2s_molar_mass =  34.082_rk ! molar mass of H2S
     real(rk),parameter :: si_molar_mass =  28.0855_rk ! molar mass of Si
     real(rk),parameter :: epsilon = 0.00000000001_rk
@@ -340,6 +339,10 @@ end function gradual_switch
    real(rk)                   :: pret,pbr
    real(rk)					  :: oxb_switch,oxb_gswitch,nnb_switch,nnb_gswitch
    real(rk),parameter :: secs_per_day = 86400._rk
+   
+   real(rk),parameter :: p_molar_mass = 30.973761_rk ! molar mass of phosphorus
+   real(rk),parameter :: n_molar_mass =  14.0067_rk ! molar mass of nitrogen
+   real(rk),parameter :: c_molar_mass =  12.011_rk ! molar mass of carbon
 !
 !EOP
 !-----------------------------------------------------------------------
@@ -508,6 +511,7 @@ end function gradual_switch
 !
 ! !LOCAL VARIABLES:
   real(rk)                 :: p_vel,sc,flo2,osat
+  real(rk),parameter       :: o2_molar_mass =  31.9988_rk ! molar mass of O2
 !  integer,parameter        :: newflux=2
 !
 !EOP
