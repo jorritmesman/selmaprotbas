@@ -89,7 +89,7 @@
       ! Model parameters
       real(rk) :: nb,deltao,nue,sigma_b,dn,dn_sed
       real(rk) :: q10_rec,ade_r0,alphaade,q10_recs,mbsrate,mbnnrate,den_frac_denanmx,den_frac_denanmx_sed
-      real(rk) :: sedrate,erorate,sedratepo4,eroratepo4,po4ret
+      real(rk) :: sedrate,erorate,sedratepo4,eroratepo4,po4ret,nitrif_rate
       real(rk) :: fl_burialrate,pburialrate,pliberationrate,ipo4th,br0,fds,pvel,tau_crit
       integer  :: newflux
       character(len=16) :: env_type ! identifier for setting the environment to "marine" or "fresh" (fresh disables mineralization with sulphate)
@@ -146,6 +146,7 @@ end function gradual_switch
    call self%get_parameter(self%mbsrate, 'mbsrate', '-', 'mineralization by sulphate rate relative to mineralization by oxygen, not used for env_type = fresh', default=0.1_rk)
    call self%get_parameter(self%den_frac_denanmx, 'den_frac_denanmx', '-', 'relative contribution of denitrification out of total denitrification + anammox', default=1.0_rk, minimum=0.0_rk, maximum=1.0_rk)
    call self%get_parameter(self%den_frac_denanmx_sed, 'den_frac_denanmx_sed', '-', 'relative contribution of denitrification out of total denitrification + anammox in sediment', default=1.0_rk, minimum=0.0_rk, maximum=1.0_rk)
+   call self%get_parameter(self%nitrif_rate, 'nitrif_rate', '1/d', 'nitrification rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%q10_recs,'q10_recs','1/K', 'temperature dependence of sediment remineralization', default=0.175_rk)
    call self%get_parameter(self%tau_crit,'tau_crit','N/m2', 'critical shear stress', default=0.07_rk)
    call self%get_parameter(self%sedrate, 'sedrate', 'm/d', 'detritus sedimentation rate', default=2.25_rk, scale_factor=1.0_rk/secs_per_day)
@@ -281,7 +282,7 @@ end function gradual_switch
       !!!! NITRIFICATION RATE !!!!
       o2_pos = max(0.0_rk, o2) !for oxygen dependent process if o2<0 then o2=0
       ! Nitrification rate depends on oxygen availability and temperature
-      nf = o2_pos / (0.01_rk + o2_pos) * 0.1_rk * exp (0.11_rk * temp)/secs_per_day
+      nf = o2_pos / (0.01_rk + o2_pos) * self%nitrif_rate * exp (0.11_rk * temp)
 
       ! Mineralization rate depends on temperature
       ldn = self%dn * exp (self%q10_rec*temp)
