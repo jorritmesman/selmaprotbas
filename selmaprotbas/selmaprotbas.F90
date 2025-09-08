@@ -207,18 +207,18 @@ end function gradual_switch
    
    ! Register diagnostic variables
    call self%register_diagnostic_variable(self%id_NO3_mg,  'Nit',     'mg NO3N/m3','nitrate conc in mass unit')
-   call self%register_diagnostic_variable(self%id_NH4_mg,  'Amm',     'mg NH4N/m3','ammonium  conc in nitrogen mass unit')
+   call self%register_diagnostic_variable(self%id_NH4_mg,  'Amm',     'mg NH4N/m3','ammonium conc in nitrogen mass unit')
    call self%register_diagnostic_variable(self%id_PO4_mg,  'Pho',     'mg PO4P/m3','phosphate conc in phosphorus mass unit')
    call self%register_diagnostic_variable(self%id_Si_mg,   'Si_mg',   'mg Si/m3',  'silicon conc in silicon mass unit')
    call self%register_diagnostic_variable(self%id_O2_mg,   'DO_mg',   'mg O2/m3',  'oxygen in O2 mass unit')
-   call self%register_diagnostic_variable(self%id_H2S_mg,  'H2S_mg',  'mg H2S/m3',  'H2S in H2S mass unit')
+   call self%register_diagnostic_variable(self%id_H2S_mg,  'H2S_mg',  'mg H2S/m3', 'H2S in H2S mass unit')
    call self%register_diagnostic_variable(self%id_DNP,     'DNP',     'mg N/m3/d', 'denitrification pelagic')
-   call self%register_diagnostic_variable(self%id_DNB,     'DNB',     'mg N/m2/d', 'denitrification benthic', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_DNB,     'DNB',     'mg N/m2/d', 'denitrification benthic', source=source_do_bottom, domain=domain_bottom)
    call self%register_diagnostic_variable(self%id_ANMP,    'ANMP',    'mg N/m2/d', 'anammox pelagic')
-   call self%register_diagnostic_variable(self%id_ANMB,    'ANMB',    'mg N/m2/d', 'anammox bentic', source=source_do_bottom)
-   call self%register_diagnostic_variable(self%id_NBR,     'NBR',     'mg N/m2/d', 'nitrogen burial', source=source_do_bottom)
-   call self%register_diagnostic_variable(self%id_SBR,     'SBR',     'mg C/m2/d', 'sediment carbon burial', source=source_do_bottom)
-   call self%register_diagnostic_variable(self%id_PBR,     'PBR',     'mg P/m2/d', 'phosphorus burial', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_ANMB,    'ANMB',    'mg N/m2/d', 'anammox bentic', source=source_do_bottom, domain=domain_bottom)
+   call self%register_diagnostic_variable(self%id_NBR,     'NBR',     'mg N/m2/d', 'nitrogen burial', source=source_do_bottom, domain=domain_bottom)
+   call self%register_diagnostic_variable(self%id_SBR,     'SBR',     'mg C/m2/d', 'sediment carbon burial', source=source_do_bottom, domain=domain_bottom)
+   call self%register_diagnostic_variable(self%id_PBR,     'PBR',     'mg P/m2/d', 'phosphorus burial', source=source_do_bottom, domain=domain_bottom)
    call self%register_diagnostic_variable(self%id_OFL,     'OFL',     'mg O2/m2/d','oxygen surface flux (positive when into water)', source=source_do_surface)
    
    ! Register environmental dependencies
