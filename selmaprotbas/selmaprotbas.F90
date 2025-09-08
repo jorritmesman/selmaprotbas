@@ -83,7 +83,7 @@
       type (type_bottom_state_variable_id) :: id_fl_c,id_fl_p,id_fl_n,id_fl_si,id_pb
       type (type_dependency_id)            :: id_temp,id_salt
       type (type_horizontal_dependency_id) :: id_taub,id_wind
-      type (type_diagnostic_variable_id)   :: id_DNP,id_ANMP,id_NO3,id_NH4,id_PO4,id_O2_mg,id_H2S_mg,id_Si_mg
+      type (type_diagnostic_variable_id)   :: id_DNP,id_ANMP,id_NO3_mg,id_NH4_mg,id_PO4_mg,id_O2_mg,id_H2S_mg,id_Si_mg
       type (type_horizontal_diagnostic_variable_id) :: id_DNB,id_ANMB,id_SBR,id_PBR,id_OFL
 
       ! Model parameters
@@ -206,11 +206,11 @@ end function gradual_switch
    call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m^3",aggregate_variable=.true.),self%id_fl_si)
    
    ! Register diagnostic variables
-   call self%register_diagnostic_variable(self%id_NO3,    'Nit',      'mg NO3N/m**3','nitrate conc in mass unit')
-   call self%register_diagnostic_variable(self%id_NH4,    'Amm',      'mg NH4N/m**3','ammonium  conc in nitrogen mass unit')
-   call self%register_diagnostic_variable(self%id_PO4,    'Pho',      'mg PO4P/m**3','phosphate conc in phosphorus mass unit')
+   call self%register_diagnostic_variable(self%id_NO3_mg,  'Nit',      'mg NO3N/m**3','nitrate conc in mass unit')
+   call self%register_diagnostic_variable(self%id_NH4_mg,  'Amm',      'mg NH4N/m**3','ammonium  conc in nitrogen mass unit')
+   call self%register_diagnostic_variable(self%id_PO4_mg,  'Pho',      'mg PO4P/m**3','phosphate conc in phosphorus mass unit')
    call self%register_diagnostic_variable(self%id_Si_mg,   'Si_mg',   'mg Si/m**3',  'silicon conc in silicon mass unit')
-   call self%register_diagnostic_variable(self%id_O2_mg,  'DO_mg',    'mg O2/m**3',  'oxygen in O2 mass unit')
+   call self%register_diagnostic_variable(self%id_O2_mg,   'DO_mg',    'mg O2/m**3',  'oxygen in O2 mass unit')
    call self%register_diagnostic_variable(self%id_H2S_mg,  'H2S_mg',  'mg H2S/m**3',  'H2S in H2S mass unit')
    call self%register_diagnostic_variable(self%id_DNP,     'DNP',     'mg N/m3/d', 'denitrification pelagic')
    call self%register_diagnostic_variable(self%id_DNB,     'DNB',     'mg N/m2/d', 'denitrification benthic', source=source_do_bottom)
@@ -309,9 +309,9 @@ end function gradual_switch
 
       if (_AVAILABLE_(self%id_dic)) _SET_ODE_(self%id_dic, (ldn_all) * dd_c)
 
-      _SET_DIAGNOSTIC_(self%id_NO3, nn * n_molar_mass)
-      _SET_DIAGNOSTIC_(self%id_NH4, aa * n_molar_mass)
-      _SET_DIAGNOSTIC_(self%id_PO4, po * p_molar_mass)
+      _SET_DIAGNOSTIC_(self%id_NO3_mg, nn * n_molar_mass)
+      _SET_DIAGNOSTIC_(self%id_NH4_mg, aa * n_molar_mass)
+      _SET_DIAGNOSTIC_(self%id_PO4_mg, po * p_molar_mass)
       _SET_DIAGNOSTIC_(self%id_O2_mg, o2_switch * o2 * o2_molar_mass)
       _SET_DIAGNOSTIC_(self%id_H2S_mg, 0.5_rk * o2 * (o2_switch-1.0_rk) * h2s_molar_mass)
       _SET_DIAGNOSTIC_(self%id_Si_mg, si * si_molar_mass)
