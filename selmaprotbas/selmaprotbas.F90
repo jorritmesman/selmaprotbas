@@ -211,14 +211,15 @@ end function gradual_switch
    call self%register_diagnostic_variable(self%id_PO4,    'Pho',      'mg PO4P/m**3','phosphate conc in phosphorus mass unit')
    call self%register_diagnostic_variable(self%id_Si_mg,   'Si_mg',   'mg Si/m**3',  'silicon conc in silicon mass unit')
    call self%register_diagnostic_variable(self%id_O2_mg,  'DO_mg',    'mg O2/m**3',  'oxygen in O2 mass unit')
-   call self%register_diagnostic_variable(self%id_H2S_mg,  'H2S_mg',    'mg H2S/m**3',  'H2S in H2S mass unit')
-   call self%register_diagnostic_variable(self%id_DNP,     'DNP',     'mmol N/m3/d', 'denitrification pelagic')
-   call self%register_diagnostic_variable(self%id_DNB,     'DNB',     'mmol N/m2/d', 'denitrification benthic', source=source_do_bottom)
-   call self%register_diagnostic_variable(self%id_ANMP,    'ANMP',    'mmol N/m2/d', 'anammox pelagic')
-   call self%register_diagnostic_variable(self%id_ANMB,    'ANMB',    'mmol N/m2/d', 'anammox bentic', source=source_do_bottom)
-   call self%register_diagnostic_variable(self%id_SBR,     'SBR',     'mmol C/m2',   'sediment burial', source=source_do_bottom)
-   call self%register_diagnostic_variable(self%id_PBR,     'PBR',     'mmol P/m2/d', 'phosphorus burial', source=source_do_bottom)
-   call self%register_diagnostic_variable(self%id_OFL,     'OFL',     'mmol O2/m2/d','oxygen surface flux (positive when into water)', source=source_do_surface)
+   call self%register_diagnostic_variable(self%id_H2S_mg,  'H2S_mg',  'mg H2S/m**3',  'H2S in H2S mass unit')
+   call self%register_diagnostic_variable(self%id_DNP,     'DNP',     'mg N/m3/d', 'denitrification pelagic')
+   call self%register_diagnostic_variable(self%id_DNB,     'DNB',     'mg N/m2/d', 'denitrification benthic', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_ANMP,    'ANMP',    'mg N/m2/d', 'anammox pelagic')
+   call self%register_diagnostic_variable(self%id_ANMB,    'ANMB',    'mg N/m2/d', 'anammox bentic', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_NBR,     'NBR',     'mg N/m2/d', 'nitrogen burial', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_SBR,     'SBR',     'mg C/m2/d', 'sediment carbon burial', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_PBR,     'PBR',     'mg P/m2/d', 'phosphorus burial', source=source_do_bottom)
+   call self%register_diagnostic_variable(self%id_OFL,     'OFL',     'mg O2/m2/d','oxygen surface flux (positive when into water)', source=source_do_surface)
    
       
    
@@ -251,6 +252,7 @@ end function gradual_switch
     real(rk),parameter :: p_molar_mass = 30.973761_rk ! molar mass of phosphorus
     real(rk),parameter :: n_molar_mass =  14.0067_rk ! molar mass of nitrogen
     real(rk),parameter :: o2_molar_mass =  31.9988_rk ! molar mass of O2
+    real(rk),parameter :: c_molar_mass =  12.011_rk ! molar mass of carbon
     real(rk),parameter :: h2s_molar_mass =  34.082_rk ! molar mass of H2S
     real(rk),parameter :: si_molar_mass =  28.0855_rk ! molar mass of Si
     real(rk),parameter :: epsilon = 0.00000000001_rk
@@ -310,11 +312,11 @@ end function gradual_switch
       _SET_DIAGNOSTIC_(self%id_NO3, nn * n_molar_mass)
       _SET_DIAGNOSTIC_(self%id_NH4, aa * n_molar_mass)
       _SET_DIAGNOSTIC_(self%id_PO4, po * p_molar_mass)
-      _SET_DIAGNOSTIC_(self%id_O2_mg, o2 * o2_molar_mass)
+      _SET_DIAGNOSTIC_(self%id_O2_mg, o2_switch * o2 * o2_molar_mass)
       _SET_DIAGNOSTIC_(self%id_H2S_mg, 0.5_rk * o2 * (o2_switch-1.0_rk) * h2s_molar_mass)
       _SET_DIAGNOSTIC_(self%id_Si_mg, si * si_molar_mass)
-      _SET_DIAGNOSTIC_(self%id_DNP, (5.3_rk *ldn_N * dd_n + ade) * secs_per_day)
-      _SET_DIAGNOSTIC_(self%id_ANMP, (26.5_rk *anmx * dd_n) * secs_per_day)
+      _SET_DIAGNOSTIC_(self%id_DNP, (5.3_rk *ldn_N * dd_n + ade * nn) * n_molar_mass * secs_per_day)
+      _SET_DIAGNOSTIC_(self%id_ANMP, (25.5_rk *anmx * dd_n) * n_molar_mass * secs_per_day)
 
    ! Leave spatial loops (if any)
    _LOOP_END_
@@ -442,10 +444,11 @@ end function gradual_switch
    if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs_all * fl_c)
 
    ! BENTHIC DIAGNOSTIC VARIABLES
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * (ldn_N + oxb_switch * self%fds * recs) * fl_n) * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(26.5_rk * anmx * fl_n) * secs_per_day)                                 ! 212 N2 per 1 mole fluf_n
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate) * secs_per_day) ! Prev version; 2nd order: * fl_c
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * ldn_N + 4.3_rk * oxb_switch * self%fds * recs) * fl_n * n_molar_mass * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(25.5_rk * anmx * fl_n) * n_molar_mass * secs_per_day)                                        ! 212 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_NBR,(fl_n * self%fl_burialrate ) * n_molar_mass * secs_per_day) !   
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * c_molar_mass * secs_per_day) ! 
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate + fl_p * self%fl_burialrate) * p_molar_mass * secs_per_day) ! 
 
    ! Leave spatial loops over the horizontal domain (if any).
    _HORIZONTAL_LOOP_END_
@@ -555,7 +558,7 @@ end function gradual_switch
       _SET_SURFACE_EXCHANGE_(self%id_o2,flo2)
    end if
 
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_OFL,flo2 * secs_per_day)
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_OFL,flo2 * o2_molar_mass * secs_per_day)
 
    _HORIZONTAL_LOOP_END_
 
