@@ -50,6 +50,8 @@ All parameters can be accessed in text (YAML) format.
 - Option to multiply phytoplankton lightlim and nutlim (rather than uses the minimum value of them)
 - Update to some constants in the mineralisation equations
 - Option to use anammox processes and sulphate-based mineralisation
+- Nitrification rate can be specified
+- Output of bottom diagnostics is varied over depth
 
 ## How to install?
 Selmaprotbas can only be run together with the Framework for Aquatic Biogeochemical Models (FABM, "https://github.com/fabm-model/fabm"),
