@@ -47,6 +47,7 @@ All parameters can be accessed in text (YAML) format.
 - Option to use 24h-averaged light for phytoplankton growth equations
 - More phytoplankton temperature limitation options (WET/Lehman) and all handling of T-limitation occurs before nutrient and light limiation are checked. The "beta" parameter is no longer used by default, but only when tlim==3.
 - An extra phytoplankton light limitation function (similar to the llim=1 option, but more gradual)
+- Nutrient uptake constants are expressed in the concentration of each element. 
 - Option to multiply phytoplankton lightlim and nutlim (rather than uses the minimum value of them)
 - Update to some constants in the mineralisation equations
 - Option to use anammox processes and sulphate-based mineralisation
