@@ -27,6 +27,19 @@ Nutrient ratios in phyto- and zooplankton are kept constant, but may vary in det
 All parameters can be accessed in text (YAML) format. 
 
 ### What was changed from the SELMA model?
+#### v1.1
+- A DOM module was added, based on the DOMCAST model.
+- Option to use 24h-averaged light for phytoplankton growth equations
+- More phytoplankton temperature limitation options (WET/Lehman) and all handling of T-limitation occurs before nutrient and light limiation are checked. The "beta" parameter is no longer used by default, but only when tlim==3.
+- An extra phytoplankton light limitation function (similar to the llim=1 option, but more gradual)
+- Nutrient uptake constants are expressed in the concentration of each element. 
+- Option to multiply phytoplankton lightlim and nutlim (rather than uses the minimum value of them)
+- Update to some constants in the mineralisation equations
+- Option to use anammox processes and sulphate-based mineralisation
+- Nitrification rate can be specified
+- Output of bottom diagnostics is varied over depth
+#### v1.0.1
+- Compatible with FABM v1.0.4 (and it was added to FABM-plus, see below)
 #### v1.0
 - The model is now carbon-based, instead of nitrogen-based (i.e. where possible, quantities are now expressed in mmol C, instead of mmol N)
 - A silicon cycle was added
@@ -40,19 +53,6 @@ All parameters can be accessed in text (YAML) format.
 - Zooplankton predation now also conserves mass if prey has a different nutrient ratio
 - maxsed parameter has been removed
 - Iron-bound phosphorus is included in the calculation of total-P
-#### v1.0.1
-- Compatible with FABM v1.0.4 (and it was added to FABM-plus, see below)
-#### v1.1
-- A DOM module was added, based on the DOMCAST model.
-- Option to use 24h-averaged light for phytoplankton growth equations
-- More phytoplankton temperature limitation options (WET/Lehman) and all handling of T-limitation occurs before nutrient and light limiation are checked. The "beta" parameter is no longer used by default, but only when tlim==3.
-- An extra phytoplankton light limitation function (similar to the llim=1 option, but more gradual)
-- Nutrient uptake constants are expressed in the concentration of each element. 
-- Option to multiply phytoplankton lightlim and nutlim (rather than uses the minimum value of them)
-- Update to some constants in the mineralisation equations
-- Option to use anammox processes and sulphate-based mineralisation
-- Nitrification rate can be specified
-- Output of bottom diagnostics is varied over depth
 
 ## How to install?
 Selmaprotbas can only be run together with the Framework for Aquatic Biogeochemical Models (FABM, "https://github.com/fabm-model/fabm"),
