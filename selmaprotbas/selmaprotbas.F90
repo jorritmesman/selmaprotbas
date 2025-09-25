@@ -424,7 +424,7 @@ end function gradual_switch
    ! Denitrification in sediments
    _SET_BOTTOM_EXCHANGE_(self%id_nn, (-5.3_rk * ldn_N - 13.25_rk * anmx) * fl_n)
    ! Oxygen consumption due to mineralization and denitrification
-   _SET_BOTTOM_EXCHANGE_(self%id_o2, (-ldn_O - 1.6_rk * self%fds * recs - ldn_S ) * fl_c)
+   _SET_BOTTOM_EXCHANGE_(self%id_o2, (-ldn_O - oxb_switch * 1.6_rk * self%fds * recs - ldn_S ) * fl_c)
    ! Ammonium production due to mineralization (oxic & anoxic)
    _SET_BOTTOM_EXCHANGE_(self%id_aa, (ldn_S + oxb_switch * recs * ( 1.0_rk - 5.3_rk * self%fds) - 12.25_rk * anmx) * fl_n)
    ! Phosphate production due to mineralization (retention if oxic) and release in anoxic
