@@ -294,7 +294,7 @@ end function gradual_switch
       ldn_all = ldn * o2_switch + ldn_N + anmx + ldn_S ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4).
       ldn_O = ldn * o2_switch + ldn_S      ! Oxygen loss rate due to mineralization. 
 
-      _SET_ODE_(self%id_o2, ldn_O * dd_c - 2.0_rk * nf * aa + nn* ade * 0.3125_rk)
+      _SET_ODE_(self%id_o2, -ldn_O * dd_c - 2.0_rk * nf * aa + nn * ade * 0.3125_rk)
       _SET_ODE_(self%id_aa, (ldn +ldn_S - 12.25_rk * anmx) * dd_n - nf * aa)
       _SET_ODE_(self%id_nn, nf * aa - ade * nn - (5.3_rk * ldn_N + 13.25_rk * anmx) * dd_n)
       _SET_ODE_(self%id_po, (ldn_all) * dd_p)
