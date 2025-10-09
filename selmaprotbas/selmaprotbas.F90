@@ -153,7 +153,7 @@ end function gradual_switch
    call self%get_parameter(self%erorate, 'erorate', '1/d', 'sediment erosion rate', default=6._rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%sedratepo4, 'sedratepo4','m/d', 'P-Fe sedimentation rate', default=0.5_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%eroratepo4, 'eroratepo4','1/d', 'P-Fe erosion rate', default=6._rk, scale_factor=1.0_rk/secs_per_day)
-   call self%get_parameter(self%po4ret, 'po4ret', '-', 'fraction of mineralized phosphate that is converted to iron–phosphate-complexes in oxic sediments', default=0.18_rk)
+   call self%get_parameter(self%po4ret, 'po4ret', '-', 'fraction of mineralized phosphate that is converted to iron-phosphate-complexes in oxic sediments', default=0.18_rk)
    call self%get_parameter(self%pburialrate, 'pburialrate', '1/d', 'phosphate burial rate', default=0.007_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%fl_burialrate, 'fl_burialrate', '1/d', 'sediment burial rate', default=0.001_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%pliberationrate, 'pliberationrate', '1/d', 'phosphate liberation rate, anoxic sediments', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
