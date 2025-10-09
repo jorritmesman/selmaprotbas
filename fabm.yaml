@@ -21,7 +21,7 @@ instances:
       erorate: 6.0                       # sediment erosion rate (1/d), default = 6.0
       sedratepo4: 0.5                    # P-Fe sedimentation rate (m/d), default = 0.5
       eroratepo4: 6.0                    # P-Fe erosion rate (1/d), default = 6.0
-      po4ret: 0.18                       # phosphate retention rate, oxic sediments (-), default = 0.18
+      po4ret: 0.18                       # fraction of mineralized phosphate that is converted to iron-phosphate-complexes in oxic sediments (-), default = 0.18
       pburialrate: 0.007                 # phosphate burial rate (1/d), default = 0.007
       fl_burialrate: 0.001               # sediment burial rate (1/d), default = 0.001
       pliberationrate: 0.1               # phosphate liberation rate, anoxic sediments (1/d), default = 0.1
@@ -39,7 +39,7 @@ instances:
       dd_si: 20.0                        # silicon detritus (mmol Si/m3)
       o2: 280.0                          # oxygen (mmol O2/m3)
       po: 0.216                          # phosphate (mmol P/m3)
-      si: 1.000                          # siliconte (mmol Si/m3)
+      si: 1.000                          # silicon (mmol Si/m3)
       fl_c: 99.375                       # carbon fluff (mmol C/m2)
       fl_p: 0.9375                       # phosphorus fluff (mmol P/m2)
       fl_n: 15                           # nitrogen fluff (mmol N/m2)
@@ -76,7 +76,7 @@ instances:
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)
       o2: selmaprotbas/o2                # oxygen (mmol O2/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
-      si: selmaprotbas/si                # siliconte (mmol Si/m3)
+      si: selmaprotbas/si                # silicon (mmol Si/m3)
       dd_c: selmaprotbas/dd_c            # carbon detritus (mmol C/m3)
       dd_p: selmaprotbas/dd_p            # phosphorus detritus (mmol P/m3)
       dd_n: selmaprotbas/dd_n            # nitrogen detritus (mmol N/m3)
@@ -112,7 +112,7 @@ instances:
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)
       o2: selmaprotbas/o2                # oxygen (mmol O2/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
-      si: selmaprotbas/si                # siliconte (mmol Si/m3)
+      si: selmaprotbas/si                # silicon (mmol Si/m3)
       dd_c: selmaprotbas/dd_c            # carbon detritus (mmol C/m3)
       dd_p: selmaprotbas/dd_p            # phosphorus detritus (mmol P/m3)
       dd_n: selmaprotbas/dd_n            # nitrogen detritus (mmol N/m3)
@@ -157,7 +157,7 @@ instances:
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)
       o2: selmaprotbas/o2                # oxygen (mmol O2/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
-      si: selmaprotbas/si                # siliconte (mmol Si/m3)
+      si: selmaprotbas/si                # silicon (mmol Si/m3)
       dd_c: selmaprotbas/dd_c            # carbon detritus (mmol C/m3)
       dd_p: selmaprotbas/dd_p            # phosphorus detritus (mmol P/m3)
       dd_n: selmaprotbas/dd_n            # nitrogen detritus (mmol N/m3)
@@ -189,7 +189,7 @@ instances:
       prey3: cyanobacteria/c             # prey 3 (mmol C/m3)
       aa: selmaprotbas/aa                # ammonium (mmol N/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
-      si: selmaprotbas/si                # siliconte (mmol Si/m3)
+      si: selmaprotbas/si                # silicon (mmol Si/m3)
       dd_c: selmaprotbas/dd_c            # carbon detritus (mmol C/m3)
       dd_p: selmaprotbas/dd_p            # phosphorus detritus (mmol P/m3)
       dd_n: selmaprotbas/dd_n            # nitrogen detritus (mmol N/m3)
@@ -209,7 +209,6 @@ instances:
       theta: 1.047                       # Temperature adjustment coefficient (-), default = 1.047
       oc_dom: 0.01                       # Optical cross section of DOM (m2/mgDOM), default = 0.01
       qy_dom: 0.1                        # Quantum yield (mgDOM / mol PAR), default = 0.1
-      f_par: 0.45                        # PAR fraction (-), default = 0.45
       e_par: 240800                      # Energy of PAR photons (J/mol), 240800
       k_floc: 0.0006                     # flocculation rate (1/d), default = 0.0006
       mole_per_weight: 0.0416            # mole_per_weight (molC/gDOM), default = 0.0416
