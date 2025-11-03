@@ -445,7 +445,7 @@ end function gradual_switch
    if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs_all * fl_c)
 
    ! BENTHIC DIAGNOSTIC VARIABLES
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * ldn_N + 4.3_rk * oxb_switch * self%fds * recs) * fl_n * n_molar_mass * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * ldn_N + (1.0_rk - 5.3_rk * self%fds) * oxb_switch  * recs) * fl_n * n_molar_mass * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(25.5_rk * anmx * fl_n) * n_molar_mass * secs_per_day)                                        ! 212 N2 per 1 mole fluf_n
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_NBR,(fl_n * self%fl_burialrate ) * n_molar_mass * secs_per_day) !   
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * c_molar_mass * secs_per_day) ! 
