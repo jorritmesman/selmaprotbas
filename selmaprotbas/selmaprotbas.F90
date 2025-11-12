@@ -194,9 +194,9 @@ end function gradual_switch
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_dd_p)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_dd_c)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_po)
-   call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_fl_n)
-   call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_fl_p)
-   call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_fl_c)
+   ! call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_fl_n)
+   ! call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_fl_p)
+   ! call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_fl_c)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pb)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pw)
    call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_dd_c, kc)
@@ -404,7 +404,7 @@ end function gradual_switch
    anmx = recs * self%mbnnrate * nnb_gswitch * gradual_switch(aab,0.001_rk) * (1.0_rk-oxb_gswitch)*(1.0_rk - self%den_frac_denanmx_sed) ! Anammox rate depends on nitrate, ammonium and fraction of denitrification+anammox
    ldn_S = recs * self%mbsrate * (1.0_rk - nnb_gswitch) * (1.0_rk-oxb_switch)        ! Mineralization rate by sulphate. starts a bit before nitrate is depleted
    recs_all = recs * oxb_switch + ldn_N + anmx + ldn_S ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4).
-   ldn_O = recs * oxb_switch * (1.0_rk + 0.6_rk * self%fds) + ldn_S    ! Oxygen loss due to mineralization depends on fds. or sulphate loss into h2s
+   ldn_O = recs * oxb_switch * (1.0_rk + (self%fds * 3.0_rk - 2.4 * self%den_frac_denanmx_sed) + ldn_S    ! Oxygen loss (or sulphate loss into h2s) due to mineralization 
 	
    pret = self%po4ret  * oxb_switch             ! phosphate is stored with oxygen
    plib = self%pliberationrate * (1.0_rk-oxb_switch) ! phosphorus is liberated on anoxic condition
@@ -425,8 +425,8 @@ end function gradual_switch
    _SET_BOTTOM_EXCHANGE_(self%id_nn, (-5.3_rk * ldn_N - 13.25_rk * anmx) * fl_n)
    ! Oxygen consumption due to mineralization (including nitrification-denitrification in sediment)
    _SET_BOTTOM_EXCHANGE_(self%id_o2, -ldn_O * fl_c)
-   ! Ammonium production due to mineralization (oxic & anoxic)
-   _SET_BOTTOM_EXCHANGE_(self%id_aa, (recs_all - oxb_switch * recs * ( 1.0_rk + 4.3_rk * self%fds) - 13.25_rk * anmx) * fl_n)
+   ! Ammonium production due to mineralization (oxic & anoxic) and consumption due to denitrification and anammox
+   _SET_BOTTOM_EXCHANGE_(self%id_aa, (recs_all - oxb_switch * recs * self%fds * (31.8_rk - 26.5_rk * self%den_frac_denanmx_sed)) - 13.25_rk * anmx) * fl_n)
    ! Phosphate production due to mineralization (retention if oxic) and release in anoxic
    _SET_BOTTOM_EXCHANGE_(self%id_po, (1.0_rk - pret * oxb_gswitch) * recs_all * fl_p + plib * pb)
    ! Silicon production due to mineralization
@@ -445,8 +445,8 @@ end function gradual_switch
    if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs_all * fl_c)
 
    ! BENTHIC DIAGNOSTIC VARIABLES
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * ldn_N + (1.0_rk + 4.3_rk * self%fds) * oxb_switch  * recs) * fl_n * n_molar_mass * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(26.5_rk * anmx * fl_n) * n_molar_mass * secs_per_day)                                        ! 212 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(ldn_N + self%fds * self%den_frac_denanmx_sed * oxb_switch  * recs) * 5.3_rk * fl_n * n_molar_mass * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,((anmx + self%fds * (1- self%den_frac_denanmx_sed)) * 26.5_rk * fl_n) * n_molar_mass * secs_per_day)              ! 212 N2 per 1 mole fluf_n
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_NBR,(fl_n * self%fl_burialrate ) * n_molar_mass * secs_per_day) !   
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * c_molar_mass * secs_per_day) ! 
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate + fl_p * self%fl_burialrate) * p_molar_mass * secs_per_day) ! 
