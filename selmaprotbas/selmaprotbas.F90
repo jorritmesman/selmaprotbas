@@ -421,12 +421,12 @@ end function gradual_switch
    ! P-Fe resuspension, sedimentation, bio-resuspension, liberation, retention and burial
    _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb - plib * pb + recs_all * fl_p * pret * oxb_gswitch - pbr * self%pburialrate) ! Prev version; 2nd order: * fl_c
 
-   ! Denitrification in sediments
+   ! Denitrification and anammox in sediments
    _SET_BOTTOM_EXCHANGE_(self%id_nn, (-5.3_rk * ldn_N - 13.25_rk * anmx) * fl_n)
-   ! Oxygen consumption due to mineralization and denitrification
+   ! Oxygen consumption due to mineralization (including nitrification-denitrification in sediment)
    _SET_BOTTOM_EXCHANGE_(self%id_o2, -ldn_O * fl_c)
    ! Ammonium production due to mineralization (oxic & anoxic)
-   _SET_BOTTOM_EXCHANGE_(self%id_aa, (ldn_S + oxb_switch * recs * ( 1.0_rk + 4.3_rk * self%fds) - 13.25_rk * anmx) * fl_n)
+   _SET_BOTTOM_EXCHANGE_(self%id_aa, (recs_all - oxb_switch * recs * ( 1.0_rk + 4.3_rk * self%fds) - 13.25_rk * anmx) * fl_n)
    ! Phosphate production due to mineralization (retention if oxic) and release in anoxic
    _SET_BOTTOM_EXCHANGE_(self%id_po, (1.0_rk - pret * oxb_gswitch) * recs_all * fl_p + plib * pb)
    ! Silicon production due to mineralization
@@ -445,8 +445,8 @@ end function gradual_switch
    if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs_all * fl_c)
 
    ! BENTHIC DIAGNOSTIC VARIABLES
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * ldn_N - (1.0_rk - 6.3_rk * self%fds) * oxb_switch  * recs) * fl_n * n_molar_mass * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(25.5_rk * anmx * fl_n) * n_molar_mass * secs_per_day)                                        ! 212 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(5.3_rk * ldn_N + (1.0_rk + 4.3_rk * self%fds) * oxb_switch  * recs) * fl_n * n_molar_mass * secs_per_day) ! 42.4 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(26.5_rk * anmx * fl_n) * n_molar_mass * secs_per_day)                                        ! 212 N2 per 1 mole fluf_n
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_NBR,(fl_n * self%fl_burialrate ) * n_molar_mass * secs_per_day) !   
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * c_molar_mass * secs_per_day) ! 
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate + fl_p * self%fl_burialrate) * p_molar_mass * secs_per_day) ! 
