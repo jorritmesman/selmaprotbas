@@ -442,7 +442,7 @@ end function gradual_switch
    ldn_ndn = recs * self%mbnnrate * aab_gswitch * oxb_gswitch * self%fds ! Rate for mineralisation in part of the sediment where oxygen does not reach (oxygen in water column > 0)
    ldn_S = recs * self%mbsrate * (1.0_rk - nnb_gswitch) * (1.0_rk-oxb_switch)        ! Mineralization rate by sulphate. starts a bit before nitrate is depleted
    recs_all = recs * oxb_switch * (1.0_rk - self%fds) + ldn_ndn +  ldn_N + anmx + ldn_S ! Mineralization rate depends on temperature and on electron accepteor (O2,NO3,SO4).
-   ldn_O = recs * oxb_switch * ((1.0_rk - self%fds ) + (self%fds * aab_gswitch * self%mbnnrate * P2C * (424.0_rk - 306_rk * self%den_frac_denanmx_sed))) + ldn_S    ! Oxygen loss (or sulphate loss into h2s) due to mineralization 
+   ldn_O = recs * oxb_switch * (1.0_rk - self%fds ) + ldn_ndn * P2C * (424.0_rk - 306_rk * self%den_frac_denanmx_sed) + ldn_S    ! Oxygen loss (or sulphate loss into h2s) due to mineralization 
 
    pret = self%po4ret  * oxb_switch             ! phosphate is stored with oxygen
    plib = self%pliberationrate * (1.0_rk-oxb_switch) ! phosphorus is liberated on anoxic condition
@@ -482,8 +482,8 @@ end function gradual_switch
    if (_AVAILABLE_(self%id_dic)) _SET_BOTTOM_EXCHANGE_(self%id_dic, recs_all * fl_c)
 
    ! BENTHIC DIAGNOSTIC VARIABLES
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(ldn_N + ldn_ndn * self%den_frac_denanmx_sed) * 0.8_rk * C2N * fl_n * n_molar_mass * secs_per_day)  ! 42.4 N2 per 1 mole fluf_n
-   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(anmx + ldn_ndn * (1.0_rk - self%den_frac_denanmx_sed)) * 4.0_rk * C2N * fl_n * n_molar_mass * secs_per_day) ! 212 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_DNB,(0.8_rk *ldn_N * C2N + ldn_ndn * P2N * 16.0_rk * self%den_frac_denanmx_sed* self%den_frac_denanmx_sed) * fl_n * n_molar_mass * secs_per_day)  ! 42.4 N2 per 1 mole fluf_n
+   _SET_HORIZONTAL_DIAGNOSTIC_(self%id_ANMB,(4.0_rk * C2N * anmx + ldn_ndn * P2N * 424.0_rk *(1.0_rk - self%den_frac_denanmx_sed)) * fl_n * n_molar_mass * secs_per_day) ! 212 N2 per 1 mole fluf_n
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_NBR,(fl_n * self%fl_burialrate ) * n_molar_mass * secs_per_day) !   
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_SBR,(fl_c * self%fl_burialrate) * c_molar_mass * secs_per_day) ! 
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_PBR,(pbr * self%pburialrate + fl_p * self%fl_burialrate) * p_molar_mass * secs_per_day) ! 
@@ -494,7 +494,7 @@ end function gradual_switch
       _SET_HORIZONTAL_DIAGNOSTIC_(self%id_fln_MBN,(ldn_ndn + anmx + ldn_N)* fl_n * n_molar_mass * secs_per_day) ! Mineralized fluf N by NO3
       _SET_HORIZONTAL_DIAGNOSTIC_(self%id_fln_MBS,(fl_n * ldn_S) * c_molar_mass * secs_per_day) ! Mineralized fluf N by SO4
       _SET_HORIZONTAL_DIAGNOSTIC_(self%id_fluf_C2N,(fl_c/(fl_n + epsilon))) ! C:N in fluf
-      _SET_HORIZONTAL_DIAGNOSTIC_(self%id_fluf_N2P,(fl_n/(fl_p + epsilon))) ! N:P in fluf, avoid division by zero
+      _SET_HORIZONTAL_DIAGNOSTIC_(self%id_fluf_N2P,(fl_n/(fl_p + epsilon))) ! N:P in fluf
    end if
    ! Leave spatial loops over the horizontal domain (if any).
    _HORIZONTAL_LOOP_END_
