@@ -199,26 +199,26 @@
          ! Calculate if any of the ratios of the prey is lower than that of the zooplankton, which would result in reduced growth  
          ! P:C ratio
          if(self%prey_rfr(iprey) < self%rfr) then
-            growth_red_p = (self%prey_rfr(iprey) - self%rfr)/self%rfr
+            growth_red_p = (self%rfr - self%prey_rfr(iprey))/self%rfr
          else
             growth_red_p = 0
          end if
          
          ! N:C ratio
          if(self%prey_rfn(iprey) < self%rfn) then
-            growth_red_n = (self%prey_rfn(iprey) - self%rfn)/self%rfn
+            growth_red_n = (self%rfn - self%prey_rfn(iprey))/self%rfn
          else
             growth_red_n = 0
          end if
          
          ! Si:C ratio
          if(self%prey_rfs(iprey) < self%rfs) then
-            growth_red_si = (self%prey_rfs(iprey) - self%rfs)/self%rfs
+            growth_red_si = (self%rfs - self%prey_rfs(iprey))/self%rfs
          else
             growth_red_si = 0
          end if
          
-         growth_red_net = min(growth_red_p, growth_red_n, growth_red_si) ! Reduction of growth rate (fraction)
+         growth_red_net = max(growth_red_p, growth_red_n, growth_red_si) ! Reduction of growth rate (fraction)
          
          ! EOSP
          
@@ -259,26 +259,26 @@
          ! Calculate if any of the ratios of the prey is lower than that of the zooplankton, which would result in reduced growth  
          ! P:C ratio
          if(self%prey_rfr(iprey) < self%rfr) then
-            growth_red_p = (self%prey_rfr(iprey) - self%rfr)/self%rfr
+            growth_red_p = (self%rfr - self%prey_rfr(iprey))/self%rfr
          else
             growth_red_p = 0.0_rk
          end if
          
          ! N:C ratio
          if(self%prey_rfn(iprey) < self%rfn) then
-            growth_red_n = (self%prey_rfn(iprey) - self%rfn)/self%rfn
+            growth_red_n = (self%rfn - self%prey_rfn(iprey))/self%rfn
          else
             growth_red_n = 0.0_rk
          end if
          
          ! Si:C ratio
          if(self%prey_rfs(iprey) < self%rfs) then
-            growth_red_si = (self%prey_rfs(iprey) - self%rfs)/self%rfs
+            growth_red_si = (self%rfs - self%prey_rfs(iprey))/self%rfs
          else
             growth_red_si = 0.0_rk
          end if
          
-         growth_red_net = min(growth_red_p, growth_red_n, growth_red_si) ! Reduction of growth rate (fraction)
+         growth_red_net = max(growth_red_p, growth_red_n, growth_red_si) ! Reduction of growth rate (fraction)
          
          ! Nutrients released as detritus from consumption of phytoplankton with different nutrient ratios
          ! If nutrient ratios of prey are lower than zooplankton's, prey is consumed at the same rate, but zooplankton grows less (since plankton nutrient ratios need to stay constant in the selmaprotbas model)
