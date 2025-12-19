@@ -174,7 +174,6 @@ instances:
       rfs: 0                             # silicon : carbon ratio (mol Si/mol C), default = 0
       nprey: 3                           # number of prey, default = 1
       pref3: 0.5                         # preference for prey 3 (-), default = 1.0
-      prey_rfs1: 0.141509                # Si:C ratio for prey 1 (-). Important to mention nutrient ratios of prey here if they deviate from the defaults, default = 0.000 
       nue: 0.001509                      # respiration rate (m3/d/mmol C), default = 0.001509
       sigma_b: 0.004528                  # mortality rate (m3/d/mmol C), default = 0.004528
       iv: 0.27341                        # Ivlev constant, quadratic (1/(mmol C/m3)2), default = 0.27341
@@ -184,9 +183,9 @@ instances:
       couple_dom: true                   # couple phytoplankton to dom module, default = false
       f_diss: 0.2                        # fraction of zooplankton biomass that is dissolved, only used if DOM is coupled (-), default = 0.2
     coupling:
-      prey1: diatoms/c                   # prey 1 (mmol C/m3)
-      prey2: flagellates/c               # prey 2 (mmol C/m3)
-      prey3: cyanobacteria/c             # prey 3 (mmol C/m3)
+      prey1: diatoms                     # prey 1
+      prey2: flagellates                 # prey 2
+      prey3: cyanobacteria               # prey 3
       aa: selmaprotbas/aa                # ammonium (mmol N/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
       si: selmaprotbas/si                # silicon (mmol Si/m3)
