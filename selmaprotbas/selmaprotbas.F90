@@ -42,7 +42,7 @@
 !  Added settling of diatoms to bottom sediments, where diatoms are converted to fluff once settled
 !  2019/2020, by Jorrit Mesman (UniGe/UU):
 !  - Model is now carbon-based, instead of nitrogen
-!  - Added silicon cycle
+!  - Added silicate cycle
 !  - Variable nutrient ratios in detritus and fluff are now possible -> different pools
 !  - Calculation of chlorophyll is now based on phytoplankton C content and the Yc parameter
 !  - Added potential for buoyancy regulation in phytoplankton
@@ -167,11 +167,11 @@ end function gradual_switch
    call self%register_state_variable(self%id_dd_c,'dd_c','mmol C/m3', 'carbon detritus', minimum=0.0_rk,vertical_movement=wdz/secs_per_day,no_river_dilution=.true.)
    call self%register_state_variable(self%id_dd_p,'dd_p','mmol P/m3', 'phosphorus detritus', minimum=0.0_rk,vertical_movement=wdz/secs_per_day,no_river_dilution=.true.)
    call self%register_state_variable(self%id_dd_n,'dd_n','mmol N/m3', 'nitrogen detritus', minimum=0.0_rk,vertical_movement=wdz/secs_per_day,no_river_dilution=.true.)
-   call self%register_state_variable(self%id_dd_si,'dd_si','mmol Si/m3', 'silicon detritus', minimum=0.0_rk,vertical_movement=wdz/secs_per_day,no_river_dilution=.true.)
+   call self%register_state_variable(self%id_dd_si,'dd_si','mmol Si/m3', 'silicate detritus', minimum=0.0_rk,vertical_movement=wdz/secs_per_day,no_river_dilution=.true.)
    call self%register_state_variable(self%id_aa,'aa','mmol N/m3', 'ammonium', minimum=0.0_rk,no_river_dilution=.true.)
    call self%register_state_variable(self%id_nn,'nn','mmol N/m3', 'nitrate', minimum=0.0_rk,no_river_dilution=.true.)
    call self%register_state_variable(self%id_po,'po','mmol P/m3', 'phosphate', minimum=0.0_rk,no_river_dilution=.true.)
-   call self%register_state_variable(self%id_si,'si','mmol Si/m3', 'silicon', minimum=0.0_rk,no_river_dilution=.true.)
+   call self%register_state_variable(self%id_si,'si','mmol Si/m3', 'silicate', minimum=0.0_rk,no_river_dilution=.true.)
    if (self%env_type .eq. "fresh") then
       call self%register_state_variable(self%id_o2,'o2','mmol O2/m3','oxygen', minimum=0.0_rk,no_river_dilution=.true.)
       self%mbsrate = 0.0_rk   ! force mineralization by sulphate rate to be 0 regardless of input/default
@@ -181,7 +181,7 @@ end function gradual_switch
    call self%register_state_variable(self%id_fl_c,'fl_c','mmol C/m2', 'carbon fluff', minimum=0.0_rk)
    call self%register_state_variable(self%id_fl_p,'fl_p','mmol P/m2', 'phosphorus fluff', minimum=0.0_rk)
    call self%register_state_variable(self%id_fl_n,'fl_n','mmol N/m2', 'nitrogen fluff', minimum=0.0_rk)
-   call self%register_state_variable(self%id_fl_si,'fl_si','mmol Si/m2', 'silicon fluff', minimum=0.0_rk)
+   call self%register_state_variable(self%id_fl_si,'fl_si','mmol Si/m2', 'silicate fluff', minimum=0.0_rk)
    call self%register_state_variable(self%id_pb,'pb','mmol P/m2', 'PFe_s', minimum=0.0_rk)
    call self%register_state_variable(self%id_pw,'pw','mmol P/m3', 'PFe_w', minimum=0.0_rk,vertical_movement=wpo4/secs_per_day,no_river_dilution=.true.)
      
@@ -201,15 +201,15 @@ end function gradual_switch
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_pw)
    call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_dd_c, kc)
    
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_dd_si)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_si)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_fl_si)
+   call self%add_to_aggregate_variable(standard_variables%total_silicate,   self%id_fl_si)
+   call self%add_to_aggregate_variable(standard_variables%total_silicate,   self%id_si)
+   call self%add_to_aggregate_variable(standard_variables%total_silicate,   self%id_dd_si)
    
    ! Register diagnostic variables
    call self%register_diagnostic_variable(self%id_NO3_mg,  'Nit',     'mg NO3N/m3','nitrate conc in mass unit')
    call self%register_diagnostic_variable(self%id_NH4_mg,  'Amm',     'mg NH4N/m3','ammonium conc in nitrogen mass unit')
    call self%register_diagnostic_variable(self%id_PO4_mg,  'Pho',     'mg PO4P/m3','phosphate conc in phosphorus mass unit')
-   call self%register_diagnostic_variable(self%id_Si_mg,   'Si_mg',   'mg Si/m3',  'silicon conc in silicon mass unit')
+   call self%register_diagnostic_variable(self%id_Si_mg,   'Si_mg',   'mg Si/m3',  'silicate conc in silicate mass unit')
    call self%register_diagnostic_variable(self%id_O2_mg,   'DO_mg',   'mg O2/m3',  'oxygen in O2 mass unit')
    call self%register_diagnostic_variable(self%id_H2S_mg,  'H2S_mg',  'mg H2S/m3', 'H2S in H2S mass unit')
    call self%register_diagnostic_variable(self%id_DNP,     'DNP',     'mg N/m3/d', 'denitrification pelagic')
@@ -265,12 +265,12 @@ end function gradual_switch
       _GET_(self%id_dd_c,dd_c) ! carbon detritus
       _GET_(self%id_dd_p,dd_p) ! phosphorus detritus
       _GET_(self%id_dd_n,dd_n) ! nitrogen detritus
-      _GET_(self%id_dd_si,dd_si) ! silicon detritus
+      _GET_(self%id_dd_si,dd_si) ! silicate detritus
       _GET_(self%id_aa,aa) ! ammonium
       _GET_(self%id_nn,nn) ! nitrate
       _GET_(self%id_po,po) ! phosphate
       _GET_(self%id_o2,o2) ! oxygen
-      _GET_(self%id_si,si) ! silicon
+      _GET_(self%id_si,si) ! silicate
 
       _GET_(self%id_temp,temp)
 
@@ -416,7 +416,7 @@ end function gradual_switch
    _SET_BOTTOM_ODE_(self%id_fl_p,-llsd * fl_p + llds * ddb_p - biores * fl_p - recs_all * fl_p - fl_p * self%fl_burialrate) ! Prev version; 2nd order: * fl_p
    ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (nitrogen)
    _SET_BOTTOM_ODE_(self%id_fl_n,-llsd * fl_n + llds * ddb_n - biores * fl_n - recs_all * fl_n - fl_n * self%fl_burialrate) ! Prev version; 2nd order: * fl_n
-   ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (silicon)
+   ! Sediment resuspension, detritus settling, diatom settling, bio-resuspension, mineralization and burial (silicate)
    _SET_BOTTOM_ODE_(self%id_fl_si,-llsd * fl_si + llds * ddb_si - biores * fl_si - recs_all * fl_si - fl_si * self%fl_burialrate) ! Prev version; 2nd order: * fl_si
    ! P-Fe resuspension, sedimentation, bio-resuspension, liberation, retention and burial
    _SET_BOTTOM_ODE_(self%id_pb,-bpsd * pb + bpds * pwb -biores * pb - plib * pb + recs_all * fl_p * pret * oxb_gswitch - pbr * self%pburialrate) ! Prev version; 2nd order: * fl_c
@@ -429,7 +429,7 @@ end function gradual_switch
    _SET_BOTTOM_EXCHANGE_(self%id_aa, (ldn_S + oxb_switch * recs * ( 1.0_rk - 5.3_rk * self%fds) - 12.25_rk * anmx) * fl_n)
    ! Phosphate production due to mineralization (retention if oxic) and release in anoxic
    _SET_BOTTOM_EXCHANGE_(self%id_po, (1.0_rk - pret * oxb_gswitch) * recs_all * fl_p + plib * pb)
-   ! Silicon production due to mineralization
+   ! Silicate production due to mineralization
    _SET_BOTTOM_EXCHANGE_(self%id_si, recs_all * fl_si)
    ! Sediment resuspension, detritus settling, bio-resuspension (carbon)
    _SET_BOTTOM_EXCHANGE_(self%id_dd_c, llsd * fl_c -llds * ddb_c + biores * fl_c)
@@ -437,7 +437,7 @@ end function gradual_switch
    _SET_BOTTOM_EXCHANGE_(self%id_dd_p, llsd * fl_p -llds * ddb_p + biores * fl_p)
    ! Sediment resuspension, detritus settling, bio-resuspension (nitrogen)
    _SET_BOTTOM_EXCHANGE_(self%id_dd_n, llsd * fl_n -llds * ddb_n + biores * fl_n)
-   ! Sediment resuspension, detritus settling, bio-resuspension (silicon)
+   ! Sediment resuspension, detritus settling, bio-resuspension (silicate)
    _SET_BOTTOM_EXCHANGE_(self%id_dd_si, llsd * fl_si -llds * ddb_si + biores * fl_si)
    ! P-Fe resuspension, settling and bio-resuspension
    _SET_BOTTOM_EXCHANGE_(self%id_pw, bpsd * pb -bpds * pwb + biores * pb)

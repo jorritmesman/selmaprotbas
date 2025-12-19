@@ -43,28 +43,30 @@
 !
 ! !USE:
    use fabm_types
+   use fabm_particle
+   use fabm_expressions
+   use fabm_builtin_models
 
    implicit none
 
    private
 !
 ! !PUBLIC_DERIVED_TYPES:
-  type,extends(type_base_model),public :: type_selmaprotbas_zooplankton
+  type,extends(type_particle_model),public :: type_selmaprotbas_zooplankton
       ! Variable identifiers
-      type (type_state_variable_id)             :: id_c
-      type (type_state_variable_id),allocatable :: id_prey(:)
+      type (type_model_id),      allocatable,dimension(:) :: id_prey
+	  type (type_state_variable_id),allocatable,dimension(:) :: id_preyc
+      type (type_dependency_id), allocatable,dimension(:) :: id_preyn,id_preyp,id_preys
+	  type (type_state_variable_id)             :: id_c
       type (type_state_variable_id)             :: id_aa, id_po, id_dd_c, id_dd_p, id_dd_n, id_dd_si, id_dic, id_o2, id_si,id_dom_a
       type (type_dependency_id)                 :: id_temp
 
       ! Model parameters
       integer :: nprey
       real(rk), allocatable :: pref(:)
-      real(rk), allocatable :: prey_rfr(:)
-      real(rk), allocatable :: prey_rfn(:)
-      real(rk), allocatable :: prey_rfs(:)
       real(rk) :: nue,sigma_b
       real(rk) :: iv,graz,toptz,zcl1
-      real(rk) :: rfr,rfn, rfs
+      real(rk) :: rfr,rfn,rfs
 	  logical  :: couple_dom
 	  real(rk) :: f_diss, mole_c_per_weight_dom
    contains
@@ -103,17 +105,24 @@
 
    call self%get_parameter(self%nprey, 'nprey', '', 'number of prey', default=1) 
    allocate(self%id_prey(self%nprey))
+   allocate(self%id_preyc(self%nprey))
+   allocate(self%id_preyn(self%nprey))
+   allocate(self%id_preyp(self%nprey))
+   allocate(self%id_preys(self%nprey))
    allocate(self%pref(self%nprey))
-   allocate(self%prey_rfr(self%nprey))
-   allocate(self%prey_rfn(self%nprey))
-   allocate(self%prey_rfs(self%nprey))
    do iprey=1,self%nprey
       write (strprey,'(i0)') iprey
-      call self%register_state_dependency(self%id_prey(iprey),'prey'//trim(strprey), 'mmol C/m3', 'prey '//trim(strprey))
-      call self%get_parameter(self%pref(iprey), 'pref'//trim(strprey), '-', 'preference for prey '//trim(strprey), default=1.0_rk)
-      call self%get_parameter(self%prey_rfr(iprey), 'prey_rfr'//trim(strprey), '-', 'P:C ratio for prey '//trim(strprey), default=1.0_rk/106.0_rk)
-      call self%get_parameter(self%prey_rfn(iprey), 'prey_rfn'//trim(strprey), '-', 'N:C ratio for prey '//trim(strprey), default=16.0_rk/106.0_rk)
-      call self%get_parameter(self%prey_rfs(iprey), 'prey_rfs'//trim(strprey), '-', 'Si:C ratio for prey '//trim(strprey), default=0.000_rk)
+      call self%register_model_dependency(self%id_prey(iprey), 'prey' // trim(strprey))
+	  call self%register_state_dependency(self%id_preyc(iprey),'preyc'//trim(strprey), 'mmol C/m3', 'prey '//trim(strprey))
+	  call self%register_dependency(self%id_preyn(iprey),'preyn'//trim(strprey), 'mmol N/m3', 'prey '//trim(strprey))
+	  call self%register_dependency(self%id_preyp(iprey),'preyp'//trim(strprey), 'mmol P/m3', 'prey '//trim(strprey))
+	  call self%register_dependency(self%id_preys(iprey),'preys'//trim(strprey), 'mmol Si/m3', 'prey '//trim(strprey))
+	  call self%request_coupling_to_model(self%id_preyc(iprey), self%id_prey(iprey),standard_variables%total_carbon)
+	  call self%request_coupling_to_model(self%id_preyn(iprey), self%id_prey(iprey),standard_variables%total_nitrogen)
+	  call self%request_coupling_to_model(self%id_preyp(iprey), self%id_prey(iprey),standard_variables%total_phosphorus)
+	  call self%request_coupling_to_model(self%id_preys(iprey), self%id_prey(iprey),standard_variables%total_silicate)
+	  
+	  call self%get_parameter(self%pref(iprey), 'pref'//trim(strprey), '-', 'preference for prey '//trim(strprey), default=1.0_rk)
    end do
 
    call self%get_parameter(self%nue,     'nue',     'm3/d/mmol C',    'respiration rate',                default=0.001509_rk, scale_factor=1.0_rk/secs_per_day)
@@ -148,8 +157,7 @@
    call self%add_to_aggregate_variable(standard_variables%total_nitrogen,   self%id_c, self%rfn)
    call self%add_to_aggregate_variable(standard_variables%total_phosphorus, self%id_c, self%rfr)
    call self%add_to_aggregate_variable(standard_variables%total_carbon,     self%id_c)
-   call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_silicon',units="mmol/m3",aggregate_variable=.true.),self%id_c,scale_factor=self%rfs)
-   
+   call self%add_to_aggregate_variable(standard_variables%total_silicate, self%id_c, self%rfs)
 
    ! Register link to external DIC pool
    call self%register_state_dependency(self%id_dic,standard_variables%mole_concentration_of_dissolved_inorganic_carbon, required=.false.)
@@ -175,10 +183,11 @@
 !
 ! !LOCAL VARIABLES:
     real(rk) :: c, cg
-    real(rk) :: prey
+    real(rk) :: prey,preyp,preyn,preys
     real(rk) :: temp, o2
     real(rk) :: food, zz0, food_eps, gg, lzd, lzn, graz_z, tlim
     real(rk) :: growth_red_p, growth_red_n, growth_red_si, growth_red_net
+	real(rk) :: prey_rfn,prey_rfr,prey_rfs
     integer  :: iprey
     real(rk),parameter :: epsilon = 0.00000000001_rk
 !EOP
@@ -193,27 +202,35 @@
 
       food = 0
       do iprey=1,self%nprey
-         _GET_(self%id_prey(iprey),prey)
-         
+         _GET_(self%id_preyc(iprey),prey)
+         _GET_(self%id_preyp(iprey),preyp)
+		 _GET_(self%id_preyn(iprey),preyn)
+		 _GET_(self%id_preys(iprey),preys)
+		 
+		 ! Calculate nutrient ratios of the prey
+	     prey_rfr = preyp / max(prey, epsilon)
+	     prey_rfn = preyn / max(prey, epsilon)
+	     prey_rfs = preys / max(prey, epsilon)
+		 
          ! BOSP
          ! Calculate if any of the ratios of the prey is lower than that of the zooplankton, which would result in reduced growth  
          ! P:C ratio
-         if(self%prey_rfr(iprey) < self%rfr) then
-            growth_red_p = (self%rfr - self%prey_rfr(iprey))/self%rfr
+         if(prey_rfr < self%rfr) then
+            growth_red_p = (self%rfr - prey_rfr)/self%rfr
          else
             growth_red_p = 0
          end if
          
          ! N:C ratio
-         if(self%prey_rfn(iprey) < self%rfn) then
-            growth_red_n = (self%rfn - self%prey_rfn(iprey))/self%rfn
+         if(prey_rfn < self%rfn) then
+            growth_red_n = (self%rfn - prey_rfn)/self%rfn
          else
             growth_red_n = 0
          end if
          
          ! Si:C ratio
-         if(self%prey_rfs(iprey) < self%rfs) then
-            growth_red_si = (self%rfs - self%prey_rfs(iprey))/self%rfs
+         if(prey_rfs < self%rfs) then
+            growth_red_si = (self%rfs - prey_rfs)/self%rfs
          else
             growth_red_si = 0
          end if
@@ -251,29 +268,36 @@
       _SET_ODE_(self%id_o2, - lzn * zz0)
       _SET_ODE_(self%id_aa, self%rfn * lzn * zz0)
       _SET_ODE_(self%id_po, self%rfr * lzn * zz0)
-	   _SET_ODE_(self%id_si, self%rfs * lzn * zz0)
+	  _SET_ODE_(self%id_si, self%rfs * lzn * zz0)
       do iprey=1,self%nprey
-         _GET_(self%id_prey(iprey),prey)
-         
+         _GET_(self%id_preyc(iprey),prey)
+         _GET_(self%id_preyp(iprey),preyp)
+		 _GET_(self%id_preyn(iprey),preyn)
+		 _GET_(self%id_preys(iprey),preys)
+		 
+		 prey_rfr = preyp / max(prey, epsilon)
+	     prey_rfn = preyn / max(prey, epsilon)
+	     prey_rfs = preys / max(prey, epsilon)
+		 
          ! BOSP
          ! Calculate if any of the ratios of the prey is lower than that of the zooplankton, which would result in reduced growth  
          ! P:C ratio
-         if(self%prey_rfr(iprey) < self%rfr) then
-            growth_red_p = (self%rfr - self%prey_rfr(iprey))/self%rfr
+         if(prey_rfr < self%rfr) then
+            growth_red_p = (self%rfr - prey_rfr)/self%rfr
          else
             growth_red_p = 0.0_rk
          end if
          
          ! N:C ratio
-         if(self%prey_rfn(iprey) < self%rfn) then
-            growth_red_n = (self%rfn - self%prey_rfn(iprey))/self%rfn
+         if(prey_rfn < self%rfn) then
+            growth_red_n = (self%rfn - prey_rfn)/self%rfn
          else
             growth_red_n = 0.0_rk
          end if
          
          ! Si:C ratio
-         if(self%prey_rfs(iprey) < self%rfs) then
-            growth_red_si = (self%rfs - self%prey_rfs(iprey))/self%rfs
+         if(prey_rfs < self%rfs) then
+            growth_red_si = (self%rfs - prey_rfs)/self%rfs
          else
             growth_red_si = 0.0_rk
          end if
@@ -285,13 +309,13 @@
          ! Non-limiting nutrients of the phytoplankton that is consumed, but not used for growth, are released as detritus, according to the prey's nutrient ratios (1st term)
          ! If nutrient ratios of the prey are higher than zooplankton's, the excess nutrients in the amount of prey consumed, are also released as detritus, according to the difference of the prey's and zooplankton's nutrient ratios (2nd term)
          _SET_ODE_(self%id_dd_c, growth_red_net * graz_z * self%pref(iprey) * prey) ! carbon 
-         _SET_ODE_(self%id_dd_p, (growth_red_net - growth_red_p) * self%pref(iprey) * graz_z * prey * self%prey_rfr(iprey) + (1.000_rk - growth_red_net) * max(self%prey_rfr(iprey) - self%rfr, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! phosphorus
-         _SET_ODE_(self%id_dd_n, (growth_red_net - growth_red_n) * self%pref(iprey) * graz_z * prey * self%prey_rfn(iprey) + (1.000_rk - growth_red_net) * max(self%prey_rfn(iprey) - self%rfn, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! nitrogen
-         _SET_ODE_(self%id_dd_si, (growth_red_net - growth_red_si) * self%pref(iprey) * graz_z * prey * self%prey_rfs(iprey) + (1.000_rk - growth_red_net) * max(self%prey_rfs(iprey) - self%rfs, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! silicon
+         _SET_ODE_(self%id_dd_p, (growth_red_net - growth_red_p) * self%pref(iprey) * graz_z * prey * prey_rfr + (1.000_rk - growth_red_net) * max(prey_rfr - self%rfr, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! phosphorus
+         _SET_ODE_(self%id_dd_n, (growth_red_net - growth_red_n) * self%pref(iprey) * graz_z * prey * prey_rfn + (1.000_rk - growth_red_net) * max(prey_rfn - self%rfn, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! nitrogen
+         _SET_ODE_(self%id_dd_si, (growth_red_net - growth_red_si) * self%pref(iprey) * graz_z * prey * prey_rfs + (1.000_rk - growth_red_net) * max(prey_rfs - self%rfs, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! silicon
          
          ! EOSP
          
-         _SET_ODE_(self%id_prey(iprey), - graz_z * self%pref(iprey) * prey)
+         _SET_ODE_(self%id_preyc(iprey), - graz_z * self%pref(iprey) * prey)
       end do
       _SET_ODE_(self%id_c, graz_z * food - (lzn + lzd) * zz0)
       _SET_ODE_(self%id_dd_c, + lzd * zz0 * (1.0_rk - self%f_diss))
