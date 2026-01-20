@@ -58,6 +58,7 @@
       type (type_diagnostic_variable_id) :: id_chla
       type (type_diagnostic_variable_id) :: id_GPP
       type (type_diagnostic_variable_id) :: id_NPP
+      type (type_diagnostic_variable_id) :: id_Nfix
 
       real(rk) :: alpha_light, imin
       real(rk) :: alpha_n, alpha_p, alpha_si
@@ -209,6 +210,9 @@
    call self%register_diagnostic_variable(self%id_chla, 'chla','mg chl a/m3', 'chlorophyll concentration')
    call self%register_diagnostic_variable(self%id_GPP,  'GPP', 'mmol/m3/d',   'gross primary production')
    call self%register_diagnostic_variable(self%id_NPP,  'NPP', 'mmol/m3/d',   'net primary production')
+   if (self%nitrogen_fixation) then
+     call self%register_diagnostic_variable(self%id_Nfix,  'Nfix', 'mg/m3/d',   'Nitrogen fixation')
+   end if
 
 !  we create an aggregate variable for chlA
    call self%add_to_aggregate_variable(type_bulk_standard_variable(name='total_chlorophyll',units="mg/m3",aggregate_variable=.true.),self%id_chla,scale_factor=1._rk)
@@ -370,6 +374,10 @@
       _SET_DIAGNOSTIC_(self%id_chla, c/self%Yc) ! old comment before making script N-based: relation between carbon and nitrogen from Hecky et al 1993. The stoichiometry of carbon, nitrogen, and phosphorus in particulate matter of lakes and oceans. Limnology and Oceanography, 38: 709-724.
       _SET_DIAGNOSTIC_(self%id_GPP, secs_per_day * r * cg)
       _SET_DIAGNOSTIC_(self%id_NPP, secs_per_day *(r * cg - lpn * c))
+      if (self%nitrogen_fixation) then
+        ! Nitrogen acquired from dinitrogen gas
+        _SET_DIAGNOSTIC_(self%id_Nfix, secs_per_day * r * cg * self%rfn * 14.0067_rk)
+      end if
 
    ! Leave spatial loops (if any)
    _LOOP_END_
