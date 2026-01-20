@@ -61,6 +61,9 @@
 !  - Compatible with FABM v1.0.4
 !  2025, by Shajar Regev (IOLR):
 !  - Option to use anammox and sulphate-based mineralisation
+!  2026, by Jorrit Mesman and Shajar Regev (v1.2):
+!  - New reaeration option (newflux=3)
+!  - Changes to make biogeochemistry module fully in line with tracking N, P, and C separately
 !
 ! !MODULE: selmaprotbas
 !
@@ -161,8 +164,8 @@ end function gradual_switch
    call self%get_parameter(self%ipo4th, 'ipo4th', 'mmol P/m2', 'maximum phosphorus density available for burial', default=100._rk)
    call self%get_parameter(self%br0, 'br0', '1/d', 'bioresuspension rate', default=0.03_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%fds, 'fds', '-', 'fraction of sediment remineralization fueled by denitrification', default=0.7_rk)
-   call self%get_parameter(self%pvel, 'pvel', 'm/d', 'piston velocity, not used if newflux=1', default=5._rk, scale_factor=1.0_rk/secs_per_day)
-   call self%get_parameter(self%newflux, 'newflux', '-', 'oxygen flux type', default=2)
+   call self%get_parameter(self%pvel, 'pvel', 'm/d', 'piston velocity, only used if newflux=2 or 4', default=5._rk, scale_factor=1.0_rk/secs_per_day)
+   call self%get_parameter(self%newflux, 'newflux', '-', 'oxygen flux type (1=wind-based and Weiss saturation; 2=pvel parameter; 3=Cole and Caraco, Weiss, and Wanninkhof; 4=seawater temperature only)', default=2)
    call self%get_parameter(self%diagnostics, 'diagnostics', '-', 'toggle diagnostic output', default=.false.)
    
    ! Register state variables
@@ -307,7 +310,7 @@ end function gradual_switch
       ldn_O = ldn * o2_switch + ldn_S      ! Oxygen loss rate due to mineralization. 
 
       _SET_ODE_(self%id_o2, -ldn_O * dd_c - 2.0_rk * nf * aa + nn * ade * 0.3125_rk)
-      _SET_ODE_(self%id_aa, ldn_all * dd_n - 2.0_rk * anmx * dd_c - nf * aa)
+      _SET_ODE_(self%id_aa, ldn_all * dd_n - 2.0_rk * anmx * dd_c - nf * aa) ! SR: NH4 and NO3 consumption depends only on the carbon content of the organic material
       _SET_ODE_(self%id_nn, nf * aa - ade * nn - (0.8_rk * ldn_N + 2.0_rk * anmx) * dd_c)
       _SET_ODE_(self%id_po, (ldn_all) * dd_p)
       _SET_ODE_(self%id_si, (ldn_all) * dd_si)
@@ -533,9 +536,10 @@ end function gradual_switch
 
   real(rk)           :: temp,wnd,salt,o2
   real(rk),parameter :: secs_per_day = 86400._rk
+  real(rk),parameter :: secs_per_hour = 3600._rk
 !
 ! !LOCAL VARIABLES:
-  real(rk)                 :: p_vel,sc,flo2,osat
+  real(rk)                 :: p_vel,sc,flo2,osat,schmidt
   real(rk),parameter       :: o2_molar_mass =  31.9988_rk ! molar mass of O2
 !  integer,parameter        :: newflux=2
 !
@@ -580,9 +584,27 @@ end function gradual_switch
           * 44.66e0_rk
       flo2 = self%pvel * (osat - o2)
       _SET_SURFACE_EXCHANGE_(self%id_o2,flo2)
-   else
-      flo2 = self%pvel * (31.25_rk * (14.603_rk - 0.40215_rk * temp) - o2)
+   elseif (self%newflux .eq. 3) then
+      ! Use Weiss formula for oxygen saturation
+	  osat = osat_weiss(temp,salt)
+	  
+	  ! Schmidt number for O2 based on Wanninkhof (1992, Journ. of Geophys. Res.) differs between fresh- and seawater
+	  if (self%env_type .eq. "fresh") then
+         schmidt = 1800.6_rk - 120.1_rk * temp + 3.7818_rk * temp**2_rk + 0.047608_rk * temp**3_rk
+      else
+         schmidt = 1953.4_rk - 128.0_rk * temp + 3.9918_rk * temp**2_rk + 0.050091_rk * temp**3_rk
+      end if
+	  
+	  !  Exchange based on Cole & Caroco (1998, L&O) following Staehr et al. (2010, L&O Methods)
+	  p_vel = ((2.07_rk + 0.215_rk * wnd**1.7_rk) / 100_rk * (schmidt/600.0_rk)**(-0.5_rk)) * (osat - o2) / secs_per_hour
+	  _SET_SURFACE_EXCHANGE_(self%id_o2,flo2)
+   elseif (self%newflux .eq. 4) then
+      ! Previous default option - seawater only
+	  flo2 = self%pvel * (31.25_rk * (14.603_rk - 0.40215_rk * temp) - o2)
       _SET_SURFACE_EXCHANGE_(self%id_o2,flo2)
+   else
+	  print *, 'ERROR: Invalid option for newflux, should be 1,2,3, or 4'
+	  stop
    end if
 
    _SET_HORIZONTAL_DIAGNOSTIC_(self%id_OFL,flo2 * o2_molar_mass * secs_per_day)

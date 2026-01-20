@@ -28,8 +28,9 @@ instances:
       ipo4th: 100.0                      # maximum phosphorus density available for burial (mmol P/m2), default = 100.0
       br0: 0.03                          # bioresuspension rate (1/d), default = 0.03
       fds: 0.7                           # fraction of sediment remineralization fueled by denitrification (-), default = 0.7
-      pvel: 5.0                          # piston velocity, not used if newflux=1 (m/d), default = 5.0
-      newflux: 2                         # oxygen flux type (-), default = 2
+      pvel: 5.0                          # piston velocity, only used if newflux=2 or 4 (m/d), default = 5.0
+      newflux: 2                         # oxygen flux type (1=wind-based and Weiss saturation; 2=pvel parameter; 3=Cole and Caraco, Weiss, and Wanninkhof; 4=seawater temperature only), default = 2
+      diagnostics: false
     initialization:
       nn: 3.5                            # nitrate (mmol N/m3)
       aa: 0.85                           # ammonium (mmol N/m3)
