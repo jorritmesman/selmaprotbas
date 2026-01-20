@@ -27,6 +27,10 @@ Nutrient ratios in phyto- and zooplankton are kept constant, but may vary in det
 All parameters can be accessed in text (YAML) format. 
 
 ### What was changed from the SELMA model?
+#### v1.2
+- Biogeochemical model update, which is better representative of the individual tracking of N, P, and C
+- Option to use Cole and Caraco reaeration dynamics
+- Bug fix to zooplankton nutrient mass balance
 #### v1.1
 - A DOM module was added, based on the DOMCAST model.
 - Option to use 24h-averaged light for phytoplankton growth equations
