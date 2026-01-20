@@ -599,7 +599,7 @@ end function gradual_switch
 	  p_vel = ((2.07_rk + 0.215_rk * wnd**1.7_rk) / 100_rk * (schmidt/600.0_rk)**(-0.5_rk)) * (osat - o2) / secs_per_hour
 	  _SET_SURFACE_EXCHANGE_(self%id_o2,flo2)
    elseif (self%newflux .eq. 4) then
-      ! Previous default option - seawater only
+      ! Seawater only
 	  flo2 = self%pvel * (31.25_rk * (14.603_rk - 0.40215_rk * temp) - o2)
       _SET_SURFACE_EXCHANGE_(self%id_o2,flo2)
    else
