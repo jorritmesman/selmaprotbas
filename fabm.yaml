@@ -37,14 +37,14 @@ instances:
       dd_c: 0.0                          # carbon detritus (mmol C/m3)
       dd_p: 0.0                          # phosphorus detritus (mmol P/m3)
       dd_n: 0.0                          # nitrogen detritus (mmol N/m3)
-      dd_si: 20.0                        # silicon detritus (mmol Si/m3)
+      dd_si: 20.0                        # silica detritus (mmol Si/m3)
       o2: 280.0                          # oxygen (mmol O2/m3)
       po: 0.216                          # phosphate (mmol P/m3)
-      si: 1.000                          # silicon (mmol Si/m3)
+      si: 1.000                          # silica (mmol Si/m3)
       fl_c: 99.375                       # carbon fluff (mmol C/m2)
       fl_p: 0.9375                       # phosphorus fluff (mmol P/m2)
       fl_n: 15                           # nitrogen fluff (mmol N/m2)
-      fl_si: 14.0625                     # silicon fluff (mmol Si/m2)
+      fl_si: 14.0625                     # silica fluff (mmol Si/m2)
       pb: 0.03                           # phosphate bound to iron in sediment (mmol C/m2)
       pw: 0.001                          # phosphate bound to iron in water (mmol C/m3)
   diatoms:
@@ -53,10 +53,10 @@ instances:
       c0: 0.006625                       # background concentration (mmol C/m3), default = 0.0
       rfr: 0.009434                      # phosphorus : carbon ratio (mol P/mol C), default = 1/106 = 0.009434
       rfn: 0.150943                      # nitrogen : carbon ratio (mol N/mol C), default = 16/106 = 0.150943
-      rfs: 0.141509                      # silicon : carbon ratio (mol Si/mol C), default = 0.000
+      rfs: 0.141509                      # silica : carbon ratio (mol Si/mol C), default = 0.000
       alpha_n: 0.25                      # half-saturation concentration for nitrogen uptake (mmol N/m3), default = 0.25
       alpha_p: 0.015625                  # half-saturation concentration for phosphorus uptake (mmol P/m3), default = 0.015625
-      alpha_si: 0.234375                 # half-saturation concentration for silicon uptake (mmol Si/m3), default = 0.0
+      alpha_si: 0.234375                 # half-saturation concentration for silica uptake (mmol Si/m3), default = 0.0
       r0: 1.2                            # maximum growth rate; tlim=1 - at 0 degC and 2*r0 at temp>>sqrt(tll); tlim=2 - at temp>>tll; tlim=3 or 4 - at 20 degC; tlim=5 - at temp_opt, default = 1.3
       tlim: 4                            # temperature limitation of growth (0: none, 1: flagellate-style, 2: cyanobacteria-style, 3:PROTECH-style, 4:optimal-stdev, 5: Lehman-equation, default = 0
       temp_opt: 12.0                     # optimum temperature of growth rate (degrees C), default = 20.0
@@ -77,11 +77,11 @@ instances:
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)
       o2: selmaprotbas/o2                # oxygen (mmol O2/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
-      si: selmaprotbas/si                # silicon (mmol Si/m3)
+      si: selmaprotbas/si                # silica (mmol Si/m3)
       dd_c: selmaprotbas/dd_c            # carbon detritus (mmol C/m3)
       dd_p: selmaprotbas/dd_p            # phosphorus detritus (mmol P/m3)
       dd_n: selmaprotbas/dd_n            # nitrogen detritus (mmol N/m3)
-      dd_si: selmaprotbas/dd_si          # silicon detritus (mmol Si/m3)
+      dd_si: selmaprotbas/dd_si          # silica detritus (mmol Si/m3)
       dom_a: dom/dom_a                   # labile DOM (mg/m3)
     initialization:
       c: 0.006625                        # concentration (mmol C/m3)
@@ -91,7 +91,7 @@ instances:
       c0: 0.006625                       # background concentration (mmol C/m3), default = 0.0
       rfr: 0.009434                      # phosphorus : carbon ratio (mol P/mol C), default = 1/106 = 0.009434
       rfn: 0.150943                      # nitrogen : carbon ratio (mol N/mol C), default = 16/106 = 0.150943
-      rfs: 0                             # silicon : carbon ratio (mol Si/mol C), default = 0.000
+      rfs: 0                             # silica : carbon ratio (mol Si/mol C), default = 0.000
       alpha_n: 0.25                      # half-saturation concentration for nitrogen uptake (mmol N/m3), default = 0.25
       alpha_p: 0.015625                  # half-saturation concentration for phosphorus uptake (mmol P/m3), default = 0.015625
       r0: 0.5                            # maximum growth rate; tlim=1 - at 0 degC and 2*r0 at temp>>sqrt(tll); tlim=2 - at temp>>tll; tlim=3 or 4 - at 20 degC; tlim=5 - at temp_opt, default = 1.3
@@ -113,11 +113,11 @@ instances:
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)
       o2: selmaprotbas/o2                # oxygen (mmol O2/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
-      si: selmaprotbas/si                # silicon (mmol Si/m3)
+      si: selmaprotbas/si                # silica (mmol Si/m3)
       dd_c: selmaprotbas/dd_c            # carbon detritus (mmol C/m3)
       dd_p: selmaprotbas/dd_p            # phosphorus detritus (mmol P/m3)
       dd_n: selmaprotbas/dd_n            # nitrogen detritus (mmol N/m3)
-      dd_si: selmaprotbas/dd_si          # silicon detritus (mmol Si/m3)
+      dd_si: selmaprotbas/dd_si          # silica detritus (mmol Si/m3)
       dom_a: dom/dom_a                   # labile DOM (mg/m3)
     initialization:
       c: 0.006625                        # concentration (mmol C/m3)
@@ -127,7 +127,7 @@ instances:
       c0: 0.006625                       # background concentration (mmol C/m3), default = 0.0
       rfr: 0.009434                      # phosphorus : carbon ratio (mol P/mol C), default = 1/106 = 0.009434
       rfn: 0.150943                      # nitrogen : carbon ratio (mol N/mol C), default = 16/106 = 0.150943
-      rfs: 0                             # silicon : carbon ratio (mol Si/mol C), default = 0.000
+      rfs: 0                             # silica : carbon ratio (mol Si/mol C), default = 0.000
       alpha_n: 0.25                      # half-saturation concentration for nitrogen uptake (mmol N/m3), default = 0.25
       alpha_p: 0.015625                  # half-saturation concentration for phosphorus uptake (mmol P/m3), default = 0.015625
       r0: 1.3                            # maximum growth rate; tlim=1 - at 0 degC and 2*r0 at temp>>sqrt(tll); tlim=2 - at temp>>tll; tlim=3 or 4 - at 20 degC; tlim=5 - at temp_opt, default = 1.3
@@ -158,11 +158,11 @@ instances:
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)
       o2: selmaprotbas/o2                # oxygen (mmol O2/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
-      si: selmaprotbas/si                # silicon (mmol Si/m3)
+      si: selmaprotbas/si                # silica (mmol Si/m3)
       dd_c: selmaprotbas/dd_c            # carbon detritus (mmol C/m3)
       dd_p: selmaprotbas/dd_p            # phosphorus detritus (mmol P/m3)
       dd_n: selmaprotbas/dd_n            # nitrogen detritus (mmol N/m3)
-      dd_si: selmaprotbas/dd_si          # silicon detritus (mmol Si/m3)
+      dd_si: selmaprotbas/dd_si          # silica detritus (mmol Si/m3)
       dom_a: dom/dom_a                   # labile DOM (mg/m3)
     initialization:
       c: 0.006625                        # concentration (mmol C/m3)
@@ -172,7 +172,7 @@ instances:
       c0: 0.006625                       # background concentration (mmol C/m3), default = 0.0
       rfr: 0.009434                      # phosphorus : carbon ratio (mol P/mol C), default = 1/106 = 0.009434
       rfn: 0.150943                      # nitrogen : carbon ratio (mol N/mol C), default = 16/106 = 0.150943
-      rfs: 0                             # silicon : carbon ratio (mol Si/mol C), default = 0
+      rfs: 0                             # silica : carbon ratio (mol Si/mol C), default = 0
       nprey: 3                           # number of prey, default = 1
       pref3: 0.5                         # preference for prey 3 (-), default = 1.0
       nue: 0.001509                      # respiration rate (m3/d/mmol C), default = 0.001509
@@ -189,11 +189,11 @@ instances:
       prey3: cyanobacteria               # prey 3
       aa: selmaprotbas/aa                # ammonium (mmol N/m3)
       po: selmaprotbas/po                # phosphate (mmol P/m3)
-      si: selmaprotbas/si                # silicon (mmol Si/m3)
+      si: selmaprotbas/si                # silica (mmol Si/m3)
       dd_c: selmaprotbas/dd_c            # carbon detritus (mmol C/m3)
       dd_p: selmaprotbas/dd_p            # phosphorus detritus (mmol P/m3)
       dd_n: selmaprotbas/dd_n            # nitrogen detritus (mmol N/m3)
-      dd_si: selmaprotbas/dd_si          # silicon detritus (mmol Si/m3)
+      dd_si: selmaprotbas/dd_si          # silica detritus (mmol Si/m3)
       o2: selmaprotbas/o2                # oxygen (mmol O2/m3)
       dom_a: dom/dom_a                   # labile DOM (mg/m3)
     initialization:
