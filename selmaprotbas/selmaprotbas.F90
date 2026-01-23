@@ -595,8 +595,10 @@ end function gradual_switch
          schmidt = 1953.4_rk - 128.0_rk * temp + 3.9918_rk * temp**2_rk + 0.050091_rk * temp**3_rk
       end if
 	  
-	  !  Exchange based on Cole & Caroco (1998, L&O) following Staehr et al. (2010, L&O Methods)
-	  p_vel = ((2.07_rk + 0.215_rk * wnd**1.7_rk) / 100_rk * (schmidt/600.0_rk)**(-0.5_rk)) * (osat - o2) / secs_per_hour
+	  ! Exchange based on Cole & Caroco (1998, L&O) following Staehr et al. (2010, L&O Methods)
+	  p_vel = ((2.07_rk + 0.215_rk * wnd**1.7_rk) / 100_rk * (schmidt/600.0_rk)**(-0.5_rk)) ! in m/h
+	  p_vel = p_vel / secs_per_hour
+	  flo2 = p_vel * (osat - o2)
 	  _SET_SURFACE_EXCHANGE_(self%id_o2,flo2)
    elseif (self%newflux .eq. 4) then
       ! Seawater only
