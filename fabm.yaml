@@ -209,6 +209,7 @@ instances:
       theta: 1.047                       # Temperature adjustment coefficient (-), default = 1.047
       oc_dom: 0.01                       # Optical cross section of DOM (m2/mgDOM), default = 0.01
       qy_dom: 0.1                        # Quantum yield (mgDOM / mol PAR), default = 0.1
+      f_par: 0.45                        # PAR fraction (-), default = 0.45
       e_par: 240800                      # Energy of PAR photons (J/mol), 240800
       k_floc: 0.0006                     # flocculation rate (1/d), default = 0.0006
       mole_per_weight: 0.0416            # mole_per_weight (molC/gDOM), default = 0.0416

@@ -15,12 +15,12 @@ module selmaprotbas_dom
       ! Variable identifiers
 	  type (type_state_variable_id)        :: id_dom_a, id_dom_b ! a is labile, b is semi-labile
 	  type (type_state_variable_id)        :: id_o2, id_nn, id_aa, id_dd_c
-	  type (type_dependency_id)            :: id_temp, id_par
-	  type (type_diagnostic_variable_id)   :: id_extinc, id_rate11, id_rate12, id_rate21, id_rate22, id_rate3a, id_rate3b, id_rate4a, id_rate4b, id_rate5, id_parflux !reaction rates
+	  type (type_dependency_id)            :: id_temp, id_swf
+	  type (type_diagnostic_variable_id)   :: id_extinc, id_rate11, id_rate12, id_rate21, id_rate22, id_rate3a, id_rate3b, id_rate4a, id_rate4b, id_rate5 !reaction rates
 	  
 	  ! Model parameters
 	  real(rk) :: theta, km_o2, km_no3, k_inh_o2
-	  real(rk) :: k_om1, k_om2, oc_dom, qy_dom, e_par, k_leach, q_leach
+	  real(rk) :: k_om1, k_om2, oc_dom, qy_dom, f_par, e_par, k_leach, q_leach
 	  real(rk) :: k_floc, mole_per_weight, n_use_factor, ext_coef_a, ext_coef_b
 	  logical  :: diagnostics
    contains
@@ -50,7 +50,8 @@ contains
 	  call self%get_parameter(self%theta, 'theta',  '-', 'Temperature adjustment coefficient', default=1.047_rk)
 	  call self%get_parameter(self%oc_dom, 'oc_dom', 'm2/mgDOM', 'Optical cross section of DOM', default=0.01_rk)
 	  call self%get_parameter(self%qy_dom, 'qy_dom', 'mgDOM / mol PAR', 'Quantum yield', default=0.1_rk)
-      call self%get_parameter(self%e_par, 'e_par', 'J/mol', 'Energy of PAR photons', default=240800._rk)
+      call self%get_parameter(self%f_par, 'f_par', '-', 'PAR fraction', default=0.45_rk)
+	  call self%get_parameter(self%e_par, 'e_par', 'J/mol', 'Energy of PAR photons', default=240800._rk)
 	  call self%get_parameter(self%k_floc, 'k_floc', '1/d', 'flocculation rate', default=0.0006_rk, scale_factor=d_per_s)
 	  call self%get_parameter(self%mole_per_weight, 'mole_per_weight', 'molC/gDOM', 'mol C per g DOM', default=0.0416_rk) ! Default assumes 50% C/DW weight ratio and 12.01 g/mole molar mass
 	  call self%get_parameter(self%n_use_factor, 'n_use_factor', 'mmol N / mg DOM', 'Factor of bacterial mineralisation as N flux', default=0.8_rk)
@@ -72,7 +73,7 @@ contains
 	  
 	  ! Register light extinction diagnostic and light aggregation
 	  call self%register_diagnostic_variable(self%id_extinc, 'extinc', '1/m', 'shading by CDOM')
-	  call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_photosynthetic_radiative_flux, self%id_extinc)
+	  call self%add_to_aggregate_variable(standard_variables%attenuation_coefficient_of_shortwave_flux, self%id_extinc)
 	  
 	  ! register diagnostic variable -> rates included only for debugging purposes
       if(self%diagnostics) then
@@ -85,12 +86,11 @@ contains
 		  call self%register_diagnostic_variable(self%id_rate4a, 'rate4a', 'mgDOM/m3/s', 'rate4a - dom_a_floc')
 		  call self%register_diagnostic_variable(self%id_rate4b, 'rate4b', 'mgDOM/m3/s', 'rate4b - dom_b_floc')
 		  call self%register_diagnostic_variable(self%id_rate5,  'rate5',  'mgDOM/m3/s', 'rate5 - leaching')
-		  call self%register_diagnostic_variable(self%id_parflux, 'parflux',  'W/m2', 'photosynthetic radiative flux')
 	  endif
 	  
 	  ! Register environmental dependencies
 	  call self%register_dependency(self%id_temp, standard_variables%temperature)
-	  call self%register_dependency(self%id_par,  standard_variables%downwelling_photosynthetic_radiative_flux)
+	  call self%register_dependency(self%id_swf,  standard_variables%downwelling_shortwave_flux)
 	  
 	  call self%add_to_aggregate_variable(standard_variables%total_carbon, self%id_dom_a, scale_factor = self%mole_per_weight)
 	  call self%add_to_aggregate_variable(standard_variables%total_carbon, self%id_dom_b, scale_factor = self%mole_per_weight)
@@ -105,7 +105,7 @@ contains
 !
 ! !LOCAL VARIABLES:
    real(rk)                   :: dom_a, dom_b 
-   real(rk)                   :: temp, o2, nn, dd_c, par
+   real(rk)                   :: temp, o2, nn, dd_c, swf
    real(rk)                   :: temp_adj, rate_o2, rate_no3, R11, R12, R21, R22, R3a, R3b, R4a, R4b, r_leach
 !EOP
 !-----------------------------------------------------------------------
@@ -119,7 +119,7 @@ contains
    
    ! Retrieve current environmental conditions
    _GET_(self%id_temp, temp)    ! temperature
-   _GET_(self%id_par, par)      ! local PAR
+   _GET_(self%id_swf, swf)      ! local SWR
    
    !retrieve domcast variables
    _GET_(self%id_o2, o2)
@@ -140,9 +140,8 @@ contains
    R22 = self%k_om2 * rate_no3 * dom_b
    
    ! Photo-oxidation and photo-mineralization
-   R3a = self%oc_dom * self%qy_dom / self%e_par * par * dom_a
-   R3b = self%oc_dom * self%qy_dom / self%e_par * par * dom_b
-   ! Orig DOMCAST: R3 = self%oc_dom * self%qy_dom * self%f_par / self%e_par * swfz, as it used shortwave and a fraction of PAR
+   R3a = self%oc_dom * self%qy_dom * self%f_par / self%e_par * swf * dom_a
+   R3b = self%oc_dom * self%qy_dom * self%f_par / self%e_par * swf * dom_b
    
    ! Flocculation
    R4a = self%k_floc * dom_a
@@ -183,7 +182,6 @@ contains
 	   _SET_DIAGNOSTIC_(self%id_rate4a, R4a)
 	   _SET_DIAGNOSTIC_(self%id_rate4b, R4b)
 	   _SET_DIAGNOSTIC_(self%id_rate5, r_leach / self%mole_per_weight)
-	   _SET_DIAGNOSTIC_(self%id_parflux, par)
    endif
    
    _LOOP_END_
