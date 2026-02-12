@@ -56,10 +56,9 @@
       type (type_dependency_id) :: id_temp
       type (type_horizontal_dependency_id) :: id_taub
       type (type_diagnostic_variable_id) :: id_chla
-      type (type_diagnostic_variable_id) :: id_GPP
-      type (type_diagnostic_variable_id) :: id_NPP
-      type (type_diagnostic_variable_id) :: id_Nfix
-
+      type (type_diagnostic_variable_id) :: id_GPP, id_NPP, id_Nfix
+      type (type_diagnostic_variable_id) :: n_lim, p_lim, si_lim, light_lim, r0_after_temp
+	  
       real(rk) :: alpha_light, imin
       real(rk) :: alpha_n, alpha_p, alpha_si
       logical  :: nitrogen_fixation, use_24h_light, mult_llim_nutlim, couple_dom
@@ -76,6 +75,7 @@
       real(rk) :: Yc
       real(rk) :: sedrate
       real(rk) :: tau_crit
+	  logical  :: diagnostics
    contains
       procedure :: initialize
       procedure :: do
@@ -164,7 +164,8 @@
    call self%get_parameter(self%sedrate, 'sedrate', 'm/d', 'sedimentation rate', default=0.0_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%use_24h_light, 'use_24h_light', '-', 'use 24h averaged light for growth', default=.false.)
    call self%get_parameter(self%couple_dom, 'couple_dom', '-', 'couple phytoplankton to dom module', default=.false.)
-
+   call self%get_parameter(self%diagnostics, 'diagnostics', '-', 'toggle diagnostic output', default=.false.)
+   
    call self%register_state_variable(self%id_c, 'c', 'mmol C/m3', 'concentration', minimum=0.0_rk, background_value=c0, vertical_movement=wz)
    call self%register_state_dependency(self%id_aa, 'aa', 'mmol N/m3', 'ammonium')
    call self%register_state_dependency(self%id_nn, 'nn', 'mmol N/m3', 'nitrate')
@@ -212,6 +213,14 @@
    call self%register_diagnostic_variable(self%id_NPP,  'NPP', 'mmol/m3/d',   'net primary production')
    if (self%nitrogen_fixation) then
      call self%register_diagnostic_variable(self%id_Nfix,  'Nfix', 'mg/m3/d',   'Nitrogen fixation')
+   end if
+   ! register diagnostic variable -> included only for debugging purposes when diagnostics = true
+   if(self%diagnostics) then
+      call self%register_diagnostic_variable(self%n_lim, 'n_lim', '-', 'nitrogen limitation')
+      call self%register_diagnostic_variable(self%p_lim, 'p_lim', '-', 'phosphorus limitation')
+      call self%register_diagnostic_variable(self%si_lim, 'si_lim', '-', 'silica limitation')
+	  call self%register_diagnostic_variable(self%light_lim, 'light_lim', '-', 'light limitation')
+      call self%register_diagnostic_variable(self%r0_after_temp, 'r0_after_temp', 'd-1', 'Maximum growth rate after temperature modification')
    end if
 
 !  we create an aggregate variable for chlA
@@ -377,6 +386,14 @@
       if (self%nitrogen_fixation) then
         ! Nitrogen acquired from dinitrogen gas
         _SET_DIAGNOSTIC_(self%id_Nfix, secs_per_day * r * cg * self%rfn * 14.0067_rk)
+      end if
+	  
+	  if(self%diagnostics) then
+        _SET_DIAGNOSTIC_(self%n_lim, nlim)
+		_SET_DIAGNOSTIC_(self%p_lim, plim)
+		_SET_DIAGNOSTIC_(self%si_lim, silim)
+		_SET_DIAGNOSTIC_(self%light_lim, lightlim)
+		_SET_DIAGNOSTIC_(self%r0_after_temp, r0_temp * secs_per_day)
       end if
 
    ! Leave spatial loops (if any)

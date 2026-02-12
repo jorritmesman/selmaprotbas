@@ -30,7 +30,7 @@ instances:
       fds: 0.7                           # fraction of sediment remineralization fueled by denitrification (-), default = 0.7
       pvel: 5.0                          # piston velocity, only used if newflux=2 or 4 (m/d), default = 5.0
       newflux: 2                         # oxygen flux type (1=wind-based and Weiss saturation; 2=pvel parameter; 3=Cole and Caraco, Weiss, and Wanninkhof; 4=seawater temperature only), default = 2
-      diagnostics: false
+      diagnostics: false                 # toggle diagnostic output, default = false
     initialization:
       nn: 3.5                            # nitrate (mmol N/m3)
       aa: 0.85                           # ammonium (mmol N/m3)
@@ -72,6 +72,7 @@ instances:
       use_24h_light: false               # use 24h averaged light for growth, default = false
       couple_dom: true                   # couple phytoplankton to dom module, default = false
       f_diss: 0.2                        # fraction of phytoplankton biomass that is dissolved, only used if couple_dom=true (-), default = 0.2
+      diagnostics: false                 # toggle diagnostic output, default = false
     coupling:
       aa: selmaprotbas/aa                # ammonium (mmol N/m3)
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)
@@ -108,6 +109,7 @@ instances:
       use_24h_light: false               # use 24h averaged light for growth, default = false
       couple_dom: true                   # couple phytoplankton to dom module, default = false
       f_diss: 0.2                        # fraction of phytoplankton biomass that is dissolved, only used if couple_dom=true (-), default = 0.2
+      diagnostics: false                 # toggle diagnostic output, default = false
     coupling:
       aa: selmaprotbas/aa                # ammonium (mmol N/m3)
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)
@@ -153,6 +155,7 @@ instances:
       use_24h_light: false               # use 24h averaged light for growth, default = false
       couple_dom: true                   # couple phytoplankton to dom module, default = false
       f_diss: 0.2                        # fraction of phytoplankton biomass that is dissolved, only used if couple_dom=true (-), default = 0.2
+      diagnostics: false                 # toggle diagnostic output, default = false
     coupling:
       aa: selmaprotbas/aa                # ammonium (mmol N/m3)
       nn: selmaprotbas/nn                # nitrate (mmol N/m3)

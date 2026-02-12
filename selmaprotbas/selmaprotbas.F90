@@ -234,7 +234,6 @@ end function gradual_switch
       call self%register_diagnostic_variable(self%id_fluf_N2P, 'fluf_N2P', '-', 'N:P ratio in sediment', source=source_do_bottom, domain=domain_bottom)
       call self%register_diagnostic_variable(self%id_dd_C2P, 'dd_C2P', '-', 'C:P ratio in detritus')
       call self%register_diagnostic_variable(self%id_dd_N2P, 'dd_N2P', '-', 'N:P ratio in detritus')
-
    end if
    ! Register environmental dependencies
    call self%register_dependency(self%id_temp, standard_variables%temperature)
