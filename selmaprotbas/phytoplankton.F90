@@ -158,7 +158,7 @@
    call self%get_parameter(self%deltao,  'deltao',  '1/d', 'mortality rate', default=0.02_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%Yc,      'Yc',      'mmol C/mg Chl a', 'carbon : chlorophyll a ratio', default=6.25_rk)
    call self%get_parameter(wz,           'wz',      'm/d',  'vertical velocity (positive: upwards/floating, negative: downwards/sinking)', default=0.0_rk, scale_factor=1.0_rk/secs_per_day)
-   call self%get_parameter(kc,           'kc',      'm2/mmol C', 'specific light attenuation')
+   call self%get_parameter(kc,           'kc',      'm2/mmol C', 'specific light attenuation', default=0.0084_rk)
    !call self%get_parameter(self%sll,'sll','PSU', 'lower salinity limit', default=1.0_rk)
    !call self%get_parameter(self%sul,'sul','PSU', 'upper salinity limit', default=10.0_rk)
    call self%get_parameter(self%sedrate, 'sedrate', 'm/d', 'sedimentation rate', default=0.0_rk, scale_factor=1.0_rk/secs_per_day)

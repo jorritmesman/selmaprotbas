@@ -142,7 +142,7 @@ end function gradual_switch
    call self%get_parameter(wpo4, 'wpo4', 'm/d', 'vertical velocity of suspended P-Fe (positive: upwards/floating, negative: downwards/sinking)', default=-1.0_rk)
    call self%get_parameter(self%dn, 'dn', '1/d', 'detritus mineralization rate', default=0.003_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%dn_sed,  'dn_sed', '1/d', 'sediment mineralization rate', default=0.002_rk, scale_factor=1.0_rk/secs_per_day)
-   call self%get_parameter(kc, 'kc', 'm2/mmol C', 'specific light attenuation of detritus')
+   call self%get_parameter(kc, 'kc', 'm2/mmol C', 'specific light attenuation of detritus', default=0.0036_rk)
    call self%get_parameter(self%q10_rec, 'q10_rec', '1/K', 'temperature dependence of detritus remineralization', default=0.15_rk)
    call self%get_parameter(self%ade_r0, 'ade_r0', '1/d', 'maximum chemolithoautotrophic denitrification rate', default=0.1_rk, scale_factor=1.0_rk/secs_per_day)
    call self%get_parameter(self%alphaade,'alphaade', 'mmol N/m3', 'half-saturation constant for chemolithoautotrophic denitrification', default=1.0_rk)

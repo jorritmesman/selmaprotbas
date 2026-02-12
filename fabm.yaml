@@ -7,7 +7,7 @@ instances:
       wpo4: -1.0                         # vertical velocity of suspended P-Fe (positive: upwards/floating, negative: downwards/sinking) (m/d), default = -1.0
       dn: 0.003                          # detritus mineralization rate (1/d), default = 0.003
       dn_sed: 0.002                      # sediment mineralization rate (1/d), default = 0.002
-      kc: 0.0754716981                   # specific light attenuation of detritus (m2/mmol C)
+      kc: 0.0036                         # specific light attenuation of detritus (m2/mmol C), default = 0.0036
       q10_rec: 0.15                      # temperature dependence of detritus remineralization (1/K), default = 0.15
       ade_r0: 0.1                        # maximum chemolithoautotrophic denitrification rate (1/d), default = 0.1
       alphaade: 1.0                      # half-saturation constant for chemolithoautotrophic denitrification (mmol N/m3), default = 1.0
@@ -67,7 +67,7 @@ instances:
       deltao: 0.02                       # mortality rate (1/d), default = 0.02
       Yc: 6.25                           # carbon : chlorophyll a ratio (mmol C/mg Chl a), default = 6.25
       wz: -0.5                           # vertical velocity (positive: upwards/floating, negative: downwards/sinking) (m/d), default = 0.0
-      kc: 0.0754716981                   # specific light attenuation (m2/mmol C)
+      kc: 0.0084                         # specific light attenuation (m2/mmol C), default = 0.0084
       sedrate: 0.0                       # sedimentation rate (m/d), default = 0.0. If > 0, you need to couple to fluff variables under "coupling"
       use_24h_light: false               # use 24h averaged light for growth, default = false
       couple_dom: true                   # couple phytoplankton to dom module, default = false
@@ -103,7 +103,7 @@ instances:
       deltao: 0.02                       # mortality rate (1/d), default = 0.02
       wz: 0.0                            # vertical velocity (positive: upwards/floating, negative: downwards/sinking) (m/d), default = 0.0
       Yc: 6.25                           # carbon : chlorophyll a ratio (mmol C/mg Chl a), default = 6.25
-      kc: 0.0754716981                   # specific light attenuation (m2/mmol C)
+      kc: 0.0084                         # specific light attenuation (m2/mmol C), default = 0.0084
       sedrate: 0.0                       # sedimentation rate (m/d), default = 0.0. If > 0, you need to couple to fluff variables under "coupling"
       use_24h_light: false               # use 24h averaged light for growth, default = false
       couple_dom: true                   # couple phytoplankton to dom module, default = false
@@ -148,7 +148,7 @@ instances:
       vert_vel2: -0.1                    # rate of vertical movement below par_limit1 and above par_limit2, if buoyancy_regulation = true (m/d)
       vert_vel3: 0                       # rate of vertical movement below par_limit2 and above par_limit3, if buoyancy_regulation = true (m/d)
       vert_vel4: 0.1                     # rate of vertical movement below par_limit3, if buoyancy_regulation = true (m/d)
-      kc: 0.0754716981                   # specific light attenuation (m2/mmol C)
+      kc: 0.015                          # specific light attenuation (m2/mmol C), default = 0.0084
       sedrate: 0.0                       # sedimentation rate (m/d), default = 0.0. If > 0, you need to couple to fluff variables under "coupling"
       use_24h_light: false               # use 24h averaged light for growth, default = false
       couple_dom: true                   # couple phytoplankton to dom module, default = false
