@@ -30,7 +30,7 @@ All parameters can be accessed in text (YAML) format.
 #### v1.2
 - Biogeochemical model update, which is better representative of the individual tracking of N, P, and C
 - Option different reaeration and o2 saturation dynamics, and correct for pressure or altitude
-- Bug fix to zooplankton nutrient mass balance
+- Bug fix to zooplankton nutrient mass balance and Wanninkhof schmidt number calculation
 #### v1.1
 - A DOM module was added, based on the DOMCAST model.
 - Option to use 24h-averaged light for phytoplankton growth equations

@@ -621,13 +621,13 @@ end function gradual_switch
       p_vel = p_vel/secs_per_day
    elseif (self%o2pvel_method .eq. 3) then
       ! Schmidt number for O2 based on Wanninkhof (1992, Journ. of Geophys. Res.), for freshwater
-	  schmidt = 1800.6_rk - 120.1_rk * temp + 3.7818_rk * temp**2_rk + 0.047608_rk * temp**3_rk
+	  schmidt = 1800.6_rk - 120.1_rk * temp + 3.7818_rk * temp**2_rk - 0.047608_rk * temp**3_rk
 	  ! Exchange based on Cole & Caroco (1998, L&O) following Staehr et al. (2010, L&O Methods)
 	  p_vel = ((2.07_rk + 0.215_rk * wnd**1.7_rk) / 100_rk * (schmidt/600.0_rk)**(-0.5_rk)) ! in m/h
 	  p_vel = p_vel / secs_per_hour
    elseif (self%o2pvel_method .eq. 4) then
       ! Schmidt number for O2 based on Wanninkhof (1992, Journ. of Geophys. Res.), for saltwater
-	  schmidt = 1953.4_rk - 128.0_rk * temp + 3.9918_rk * temp**2_rk + 0.050091_rk * temp**3_rk
+	  schmidt = 1953.4_rk - 128.0_rk * temp + 3.9918_rk * temp**2_rk - 0.050091_rk * temp**3_rk
 	  ! Exchange based on Cole & Caroco (1998, L&O) following Staehr et al. (2010, L&O Methods)
 	  p_vel = ((2.07_rk + 0.215_rk * wnd**1.7_rk) / 100_rk * (schmidt/600.0_rk)**(-0.5_rk)) ! in m/h
 	  p_vel = p_vel / secs_per_hour
