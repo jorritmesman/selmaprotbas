@@ -119,7 +119,11 @@ end function switch01
 pure function gradual_switch(x, c1) result(s)
   real(rk), intent(in) :: x, c1
   real(rk) :: s
-  s = x * x / (c1 + x * x)
+  real(rk) :: xp
+  ! negative values (overshoot below 0, later clipped by repair_state) must not
+  ! switch the process back on: x*x would make the switch positive again
+  xp = max(0.0_rk, x)
+  s = xp * xp / (c1 + xp * xp)
 end function gradual_switch
 
 !BOP
@@ -360,7 +364,7 @@ end function gradual_switch
 !
 ! !LOCAL VARIABLES:
    real(rk)                   :: pwb,pb,fl_c,fl_p,fl_n,fl_si,nnb,aab,ddb_c,ddb_p,ddb_n,ddb_si,oxb,taub,temp,biores
-   real(rk)                   :: llds,llsd,bpds,bpsd,recs,recs_all,ldn_O,ldn_N,ldn_S,plib,oxb_pos,anmx,ldn_ndn
+   real(rk)                   :: llds,llsd,bpds,bpsd,recs,recs_all,ldn_O,ldn_N,ldn_S,plib,anmx,ldn_ndn
    real(rk)                   :: pret,pbr
    real(rk)                   :: oxb_switch,oxb_gswitch,nnb_switch,nnb_gswitch,aab_gswitch
    real(rk),parameter :: secs_per_day = 86400._rk
@@ -395,7 +399,7 @@ end function gradual_switch
    _GET_(self%id_temp,temp)
 
    oxb_switch = switch01(oxb)
-   oxb_gswitch = gradual_switch(max (0.0_rk,oxb), 0.01_rk) ! oxygen gradual switch = oxygen limitation (was oxlim)
+   oxb_gswitch = gradual_switch(oxb, 0.01_rk) ! oxygen gradual switch = oxygen limitation (was oxlim)
    nnb_switch = switch01(nnb)
    nnb_gswitch = gradual_switch(nnb,0.001_rk)    ! nitrate gradual switch - processes slow down when there is little nitrate
    aab_gswitch = gradual_switch(aab,0.001_rk)    ! ammonium gradual switch - processes slow down when there is little ammonium
@@ -405,8 +409,7 @@ end function gradual_switch
 
    !bio-resuspension rate
    ! Source: Neumann & Schernewski, 2008, doi:10.1016/j.jmarsys.2008.05.003
-   oxb_pos = max(0.0_rk, oxb)   
-   biores = self%br0 * gradual_switch(oxb_pos,0.03_rk)
+   biores = self%br0 * gradual_switch(oxb,0.03_rk)
 
    ! Resuspension-sedimentation rate are computed as in GOTM-BIO
    ! if actual taub is greater than critical tau, then do resuspension
