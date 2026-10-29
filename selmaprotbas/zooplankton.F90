@@ -306,12 +306,13 @@
          
          ! Nutrients released as detritus from consumption of phytoplankton with different nutrient ratios
          ! If nutrient ratios of prey are lower than zooplankton's, prey is consumed at the same rate, but zooplankton grows less (since plankton nutrient ratios need to stay constant in the selmaprotbas model)
-         ! Non-limiting nutrients of the phytoplankton that is consumed, but not used for growth, are released as detritus, according to the prey's nutrient ratios (1st term)
-         ! If nutrient ratios of the prey are higher than zooplankton's, the excess nutrients in the amount of prey consumed, are also released as detritus, according to the difference of the prey's and zooplankton's nutrient ratios (2nd term)
+         ! The release is what the prey loses minus what the zooplankton gains: prey ratio x grazing - zooplankton ratio x (reduced) growth.
+         ! This conserves each element for any prey ratios, also when the prey is poorer than the zooplankton in more than one nutrient.
+         ! It is never negative, since growth_red_net >= the reduction caused by each nutrient.
          _SET_ODE_(self%id_dd_c, growth_red_net * graz_z * self%pref(iprey) * prey) ! carbon 
-         _SET_ODE_(self%id_dd_p, (growth_red_net - growth_red_p) * self%pref(iprey) * graz_z * prey * prey_rfr + (1.000_rk - growth_red_net) * max(prey_rfr - self%rfr, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! phosphorus
-         _SET_ODE_(self%id_dd_n, (growth_red_net - growth_red_n) * self%pref(iprey) * graz_z * prey * prey_rfn + (1.000_rk - growth_red_net) * max(prey_rfn - self%rfn, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! nitrogen
-         _SET_ODE_(self%id_dd_si, (growth_red_net - growth_red_si) * self%pref(iprey) * graz_z * prey * prey_rfs + (1.000_rk - growth_red_net) * max(prey_rfs - self%rfs, 0.0_rk) * graz_z * prey * self%pref(iprey)) ! silicon
+         _SET_ODE_(self%id_dd_p, (prey_rfr - (1.000_rk - growth_red_net) * self%rfr) * graz_z * prey * self%pref(iprey)) ! phosphorus
+         _SET_ODE_(self%id_dd_n, (prey_rfn - (1.000_rk - growth_red_net) * self%rfn) * graz_z * prey * self%pref(iprey)) ! nitrogen
+         _SET_ODE_(self%id_dd_si, (prey_rfs - (1.000_rk - growth_red_net) * self%rfs) * graz_z * prey * self%pref(iprey)) ! silicon
          
          ! EOSP
          
